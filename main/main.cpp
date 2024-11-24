@@ -1,6 +1,6 @@
 // Copyright 2024 Marina Usova
 
-#define EASY_EXAMPLE
+/*#define EASY_EXAMPLE
 #ifdef EASY_EXAMPLE
 
 #include <iostream>
@@ -35,3 +35,4 @@ int main() {
 }
 
 #endif  // EASY_EXAMPLE
+*/

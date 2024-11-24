@@ -248,11 +248,18 @@ public:
             _current = _current->getNext();
             return *this;
         }
+        Iterator& operator++(int) {
+            Iterator temp = *this;
+            _current = _current->getNext();
+            return temp;
+        }
 
         bool operator!=(const Iterator& other) const {
             return _current != other._current;
         }
     };
+
+    typedef Iterator iterator;
 
     Iterator begin() {
         return Iterator(_head);
@@ -262,5 +269,4 @@ public:
         return Iterator(nullptr);
     }
 };
-
 #endif
