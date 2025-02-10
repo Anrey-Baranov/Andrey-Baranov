@@ -38,16 +38,14 @@ void DSU::union_sets(int first, int second) {
     int root1 = find(first);
     int root2 = find(second);
 
-    if (root1 != root2) {
-        if (_rank[root1] < _rank[root2]) {
-            _parent[root1] = root2;
-        }
-        else if (_rank[root1] > _rank[root2]) {
-            _parent[root2] = root1;
-        }
-        else {
-            _parent[root2] = root1;
-            _rank[root1]++;
-        }
+    if (_rank[root1 - 1] < _rank[root2 - 1]) {
+        _parent[root1 - 1] = root2 - 1;
+    }
+    else if (_rank[root1 - 1] > _rank[root2 - 1]) {
+        _parent[root2 - 1] = root1 - 1;
+    }
+    else {
+        _parent[root2 - 1] = root1 - 1;
+        _rank[root1 - 1]++;
     }
 }
