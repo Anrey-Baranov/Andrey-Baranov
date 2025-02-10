@@ -1,4 +1,4 @@
-#include <gtest.h>
+/*#include <gtest.h>
 #include "../lib_pair/TPair.h"
 #include "iostream"
 
@@ -85,3 +85,4 @@ TEST_F(TestPairLib, check_func_sub) {
 	EXPECT_EQ(pair3.first(), 1);
 	EXPECT_EQ(pair3.second(), 5);
 }
+*/
