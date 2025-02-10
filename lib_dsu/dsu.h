@@ -17,6 +17,7 @@ public:
     void union_sets(int first, int second);
     void clear();
 };
-void union_sets(int first, int second);
+
 
 #endif // DSU_H
+
