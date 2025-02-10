@@ -15,7 +15,6 @@ public:
     void make_set(int elem);
     int find(int elem);
     void union_sets(int first, int second);
-    void clear();
 };
 
 
