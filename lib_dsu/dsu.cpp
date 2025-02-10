@@ -5,7 +5,8 @@ DSU::DSU(int size) : _size(size) {
     _parent = new int[size];
     _rank = new int[size];
     for (int i = 0; i < size; i++) {
-        make_set(i + 1);  // Индексация с 1
+        _parent[i] = i;  
+        _rank[i] = 0;    
     }
 }
 
@@ -31,7 +32,7 @@ int DSU::find(int elem) {
     if (_parent[elem] != elem) {
         _parent[elem] = find(_parent[elem]);  // Сжатие пути
     }
-    return _parent[elem];
+    return _parent[elem] + 1;
 }
 void DSU::union_sets(int first, int second) {
     int root1 = find(first);
