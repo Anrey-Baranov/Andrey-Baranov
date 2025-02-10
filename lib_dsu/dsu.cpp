@@ -25,6 +25,7 @@ void DSU::make_set(int elem) {
 }
 
 int DSU::find(int elem) {
+
     if (elem <= 0 || elem > _size) {
         throw std::logic_error("Input Error: Element out of bounds.");
     }
@@ -35,6 +36,9 @@ int DSU::find(int elem) {
     return _parent[elem] + 1;
 }
 void DSU::union_sets(int first, int second) {
+    if (first <= 0 || first > _size || second <= 0 || second > _size) {
+        throw std::logic_error("Input Error: Element out of bounds.");
+    }
     int root1 = find(first);
     int root2 = find(second);
 

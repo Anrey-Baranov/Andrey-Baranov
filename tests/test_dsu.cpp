@@ -17,7 +17,8 @@ protected:
 
 TEST_F(TestDSU, TestMakeSet) {
     EXPECT_NO_THROW(dsu.make_set(5)); // Проверяем создание множества для существующего элемента
-    EXPECT_NO_THROW(dsu.make_set(7)); // Проверяем создание нового множества
+    EXPECT_THROW(dsu.make_set(7), std::logic_error); // Проверка на выход за границы
+    EXPECT_THROW(dsu.make_set(0), std::logic_error); // Проверка на выход за границы
 }
 
 TEST_F(TestDSU, TestFind) {
