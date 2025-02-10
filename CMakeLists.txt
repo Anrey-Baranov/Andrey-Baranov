@@ -10,14 +10,16 @@ project(Algorithms-and-Data-Structures)
 # Подключаем дополнительные CMakeLists.txt
 include(cmake/function.cmake)
 
+
 add_subdirectory(lib_easy_example)
 add_subdirectory(lib_queue)
 add_subdirectory(lib_polynom_monom)
 add_subdirectory(lib_pair)
 add_subdirectory(lib_list)
 add_subdirectory(lib_stack)
-add_subdirectory(main)
 add_subdirectory(lib_dsu)
+add_subdirectory(main)
+
 
 option(BTEST "build test?" ON)
 

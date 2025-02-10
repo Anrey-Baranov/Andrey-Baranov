@@ -1,4 +1,6 @@
 # указывайте последнюю доступную вам версию CMake
 cmake_minimum_required(VERSION 3.31.0 FATAL_ERROR)
 
-create_project_dsu(DSU)
+create_project_lib(DSU)
+
+ 
