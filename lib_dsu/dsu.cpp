@@ -31,7 +31,7 @@ int DSU::find(int elem) {
     }
     elem--;  // Приводим к нулевой индексации
     if (_parent[elem] != elem) {
-        _parent[elem] = find(_parent[elem]);  // Сжатие пути
+        _parent[elem] = find(_parent[elem] + 1) - 1;  // Корректировка сжатия пути
     }
     return _parent[elem] + 1;
 }
@@ -39,17 +39,21 @@ void DSU::union_sets(int first, int second) {
     if (first <= 0 || first > _size || second <= 0 || second > _size) {
         throw std::logic_error("Input Error: Element out of bounds.");
     }
+    first--;  // Преобразование к нулевой индексации
+    second--;
     int root1 = find(first) - 1;
     int root2 = find(second) - 1;
 
-    if (_rank[root1] < _rank[root2]) {
-        _parent[root1] = root2;
-    }
-    else if (_rank[root1] > _rank[root2]) {
-        _parent[root2] = root1;
-    }
-    else {
-        _parent[root2] = root1;
-        _rank[root1]++;
+    if (root1 != root2) {  // Объединяем только если корни различны
+        if (_rank[root1] < _rank[root2]) {
+            _parent[root1] = root2;
+        }
+        else if (_rank[root1] > _rank[root2]) {
+            _parent[root2] = root1;
+        }
+        else {
+            _parent[root2] = root1;
+            _rank[root1]++;
+        }
     }
 }
