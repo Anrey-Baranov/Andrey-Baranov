@@ -33,3 +33,14 @@ int DSU::find(int elem) {
     }
     return elem;
 }
+
+int DSU::find(int elem) {
+    if (elem <= 0 || elem > _size) {
+        throw std::logic_error("Input Error: Element out of bounds.");
+    }
+    elem--;  // Приводим к нулевой индексации
+    if (_parent[elem] != elem) {
+        _parent[elem] = find(_parent[elem]);  // Сжатие пути
+    }
+    return _parent[elem];
+}
