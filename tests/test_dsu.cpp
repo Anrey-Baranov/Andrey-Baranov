@@ -5,18 +5,19 @@ class TestDSU : public ::testing::Test {
 protected:
     DSU dsu;
 
-    // Конструктор для инициализации DSU с размером
-    TestDSU() : dsu(5) {  // Создаём DSU с 5 элементами
+    TestDSU() : dsu(6) {  // Создаем DSU с 6 элементами
         dsu.make_set(1);
         dsu.make_set(2);
         dsu.make_set(3);
         dsu.make_set(4);
         dsu.make_set(5);
+        dsu.make_set(6);
     }
 };
 
 TEST_F(TestDSU, TestMakeSet) {
-    EXPECT_NO_THROW(dsu.make_set(6)); // Проверяем создание нового множества
+    EXPECT_NO_THROW(dsu.make_set(5)); // Проверяем создание множества для существующего элемента
+    EXPECT_NO_THROW(dsu.make_set(7)); // Проверяем создание нового множества
 }
 
 TEST_F(TestDSU, TestFind) {
@@ -43,15 +44,15 @@ TEST_F(TestDSU, TestUnionDifferentSets) {
 
 TEST_F(TestDSU, TestInvalidFind) {
     EXPECT_THROW(dsu.find(0), std::logic_error); // Проверка на выход за границы
-    EXPECT_THROW(dsu.find(6), std::logic_error); // Проверка на выход за границы
+    EXPECT_THROW(dsu.find(7), std::logic_error); // Проверка на выход за границы
 }
 
 TEST_F(TestDSU, TestInvalidUnion) {
     EXPECT_THROW(dsu.union_sets(0, 1), std::logic_error); // Проверка на выход за границы
-    EXPECT_THROW(dsu.union_sets(1, 6), std::logic_error); // Проверка на выход за границы
+    EXPECT_THROW(dsu.union_sets(1, 7), std::logic_error); // Проверка на выход за границы
 }
 
 TEST_F(TestDSU, TestMakeSetOutOfBounds) {
     EXPECT_THROW(dsu.make_set(0), std::logic_error); // Проверка на выход за границы
-    EXPECT_THROW(dsu.make_set(6), std::logic_error); // Проверка на выход за границы
+    EXPECT_THROW(dsu.make_set(7), std::logic_error); // Проверка на выход за границы
 }
