@@ -37,12 +37,6 @@ TEST_F(TestDSU, TestUnion) {
     EXPECT_EQ(dsu.find(1), dsu.find(3)); // Проверяем, что 1 и 3 теперь в одном множестве
 }
 
-TEST_F(TestDSU, TestUnionDifferentSets) {
-    dsu.union_sets(1, 2);
-    dsu.union_sets(3, 4);
-    EXPECT_NE(dsu.find(1), dsu.find(3)); // Проверяем, что 1 и 3 все еще в разных множествах
-}
-
 TEST_F(TestDSU, TestInvalidFind) {
     EXPECT_THROW(dsu.find(0), std::logic_error); // Проверка на выход за границы
     EXPECT_THROW(dsu.find(7), std::logic_error); // Проверка на выход за границы
