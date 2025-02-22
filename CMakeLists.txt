@@ -2,14 +2,11 @@
 
 cmake_minimum_required(VERSION 3.31.0 FATAL_ERROR)
 
-
 # название проекта
 project(Algorithms-and-Data-Structures)
 
-
 # Подключаем дополнительные CMakeLists.txt
 include(cmake/function.cmake)
-
 
 add_subdirectory(lib_easy_example)
 add_subdirectory(lib_queue)
@@ -18,8 +15,9 @@ add_subdirectory(lib_pair)
 add_subdirectory(lib_list)
 add_subdirectory(lib_stack)
 add_subdirectory(lib_dsu)
+add_subdirectory(lib_itable)
+add_subdirectory(lib_unsort_tabel)
 add_subdirectory(main)
-
 
 option(BTEST "build test?" ON)
 
