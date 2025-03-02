@@ -19,9 +19,18 @@ public:
     }
 
     void insert(TKey key, TVal value) override {
+        TNode<TPair<TKey, TVal>>* current = _data.getNode(0);
+        while (current != nullptr) {
+            if (current->getValue().first() == key) {
+                current->getValue().second() = value; 
+                return;
+            }
+            current = current->getNext();
+        }
         TPair<TKey, TVal> new_row(key, value);
-        _data.pushBack(new_row); // Добавление пары по ключу
+        _data.pushBack(new_row);
     }
+
 
     void erase(TKey key) override {
         // Реализация удаления по ключу
