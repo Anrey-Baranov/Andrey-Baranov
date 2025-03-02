@@ -1,6 +1,6 @@
 template<class TKey, class TVal>
 class ITable {
-    ITable(Tabel const&);
+    ITable(ITable const&);
     ITable(TKey, TVal);
     ITable();
     virtual TKey insert(TVal value) = 0; 

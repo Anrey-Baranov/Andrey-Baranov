@@ -10,7 +10,7 @@ private:
 
 public:
     TUnsortedTable() = default;
-
+    ~TUnsortedTable() override = default;
     TKey insert(TVal value) override {
         TKey new_key = generate_key(); // Генерация ключа
         TPair<TKey, TVal> new_row(new_key, value);
