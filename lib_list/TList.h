@@ -37,7 +37,15 @@ public:
     ~TList() {
         clear();
     }
-
+    int size() const {
+        int count = 0;
+        TNode<T>* current = _head;
+        while (current != nullptr) {
+            count++;
+            current = current->getNext();
+        }
+        return count;
+    }
     TList(const TList<T>& other) : _head(nullptr), _tail(nullptr) {
         TNode<T>* current = other._head;
         while (current) {
@@ -129,6 +137,7 @@ public:
 
     TNode<T>* getNode(int index) {
         if (index < 0) throw out_of_range("Incorrect index");
+        if (isEmpty()) throw out_of_range("List is empty");
         TNode<T>* p = _head;
         for (int i = 0; i < index && p != nullptr; ++i) {
             p = p->getNext();

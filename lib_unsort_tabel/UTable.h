@@ -1,7 +1,8 @@
 #include <stdexcept>
 #include <utility>
-#include "../lib_list/TList.h" 
+#include "../lib_list/TList.h"
 #include "../lib_pair/TPair.h"
+#include "ITable.h" 
 
 template <class TKey, class TVal>
 class TUnsortedTable : public ITable<TKey, TVal> {
@@ -9,56 +10,88 @@ private:
     TList<TPair<TKey, TVal>> _data; 
 
 public:
-    TUnsortedTable() = default;
+    TUnsortedTable() : _data() {} 
     ~TUnsortedTable() override = default;
+
     TKey insert(TVal value) override {
-        TKey new_key = generate_key(); // Генерация ключа
+        TKey new_key = generate_key();
         TPair<TKey, TVal> new_row(new_key, value);
-        _data.pushBack(new_row); // Добавление пары в список
+        _data.pushBack(new_row);
         return new_key;
     }
 
     void insert(TKey key, TVal value) override {
-        TNode<TPair<TKey, TVal>>* current = _data.getNode(0);
-        while (current != nullptr) {
-            if (current->getValue().first() == key) {
-                current->getValue().second() = value; 
-                return;
-            }
-            current = current->getNext();
-        }
-        TPair<TKey, TVal> new_row(key, value);
-        _data.pushBack(new_row);
-    }
+        TList<TPair<TKey, TVal>> newData; // Создаем новый список для хранения обновленных данных
+        bool found = false;
 
+        for (auto it = _data.begin(); it != _data.end(); ++it) {
+            if ((*it).first() == key) {
+                std::cout << "Updating key " << key << " from " << (*it).second() << " to " << value << std::endl;
+                found = true;
+            }
+            else {
+                newData.pushBack(*it); // Копируем все пары, кроме той, которую обновляем
+            }
+        }
+
+        // Если ключ был найден, добавляем новую пару с обновленным значением
+        if (found) {
+            TPair<TKey, TVal> new_row(key, value);
+            newData.pushBack(new_row);
+        }
+        else {
+            TPair<TKey, TVal> new_row(key, value);
+            newData.pushBack(new_row);
+        }
+
+        _data = newData; 
+    }
 
     void erase(TKey key) override {
-        // Реализация удаления по ключу
-        TNode<TPair<TKey, TVal>>* current = _data.getNode(0);
-        while (current != nullptr) {
-            if (current->getValue().first() == key) {
-                _data.removeNode(current);
-                return;
-            }
-            current = current->getNext();
+        if (_data.isEmpty()) {
+            throw std::logic_error("List is empty");
         }
-        throw std::runtime_error("Key not found"); 
+
+        TList<TPair<TKey, TVal>> newData;
+        bool found = false;
+
+        for (auto it = _data.begin(); it != _data.end(); ++it) {
+            TPair<TKey, TVal> pair = *it;
+            if (pair.first() == key) {
+                found = true;
+            }
+            else {
+                newData.pushBack(pair);
+            }
+        }
+
+        if (!found) {
+            throw std::logic_error("Key not found");
+        }
+
+        _data = newData;
     }
 
-    TVal& find(TKey key) override {
-        // Реализация поиска по ключу
-        TNode<TPair<TKey, TVal>>* current = _data.getNode(0);
-        while (current != nullptr) {
-            if (current->getValue().first() == key) {
-                return current->getValue().second(); // Возвращаем значение по ключу
-            }
-            current = current->getNext();
+    TVal find(TKey key) override {
+        if (_data.isEmpty()) {
+            throw std::logic_error("List is empty");
         }
-        throw std::runtime_error("Key not found"); 
+
+        for (const auto& pair : _data) {
+            std::cout << "Checking key: " << pair.first() << ", value: " << pair.second() << std::endl;
+            if (pair.first() == key) {  
+                return pair.second();
+            }
+        }
+        throw std::logic_error("Key not found");
+    }
+
+    int size() override {
+        return _data.size();
     }
 
     TKey generate_key() {
-        static TKey last_key = 0; // Статическая переменная для генерации ключей
-        return ++last_key; // Генерация следующего ключа
+        static TKey last_key = 0;
+        return ++last_key;
     }
 };
