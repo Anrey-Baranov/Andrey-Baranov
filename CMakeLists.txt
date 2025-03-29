@@ -17,6 +17,7 @@ add_subdirectory(lib_stack)
 add_subdirectory(lib_dsu)
 add_subdirectory(lib_itable)
 add_subdirectory(lib_unsort_tabel)
+add_subdirectory(lib_heaps)
 add_subdirectory(main)
 
 option(BTEST "build test?" ON)
