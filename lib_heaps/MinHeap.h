@@ -1,3 +1,4 @@
+#include "Heap.h"
 template <typename T>
 class MinHeap : public Heap<T> {
 protected:

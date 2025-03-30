@@ -1,3 +1,4 @@
+#include "Heap.h"
 template <typename T>
 class MaxHeap : public Heap<T> {
 protected:

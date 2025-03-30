@@ -1,3 +1,6 @@
+#ifndef HEAP_H
+#define HEAP_H
+
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -91,3 +94,5 @@ public:
         return data.size();
     }
 };
+
+#endif // HEAP_H
