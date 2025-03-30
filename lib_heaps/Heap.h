@@ -4,7 +4,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
-#include <iostream> // Для отладки
+#include <iostream> 
 
 template <typename T>
 class Heap {
@@ -27,34 +27,31 @@ public:
 
     void buildHeap() {
         if (data.empty()) return;
-        size_t start = data.size() / 2;
-        while (start > 0) {
-            start--;
-            heapify(start);
+
+        for (int i = static_cast<int>(data.size()) / 2 - 1; i >= 0; --i) {
+            heapify(static_cast<size_t>(i));
         }
     }
 
     virtual void heapify(size_t i) {
-        if (i >= data.size()) return;  
+        size_t size = data.size();
+        if (i >= size) return;
 
         while (true) {
+            size_t largest = i;
             size_t l = left(i);
             size_t r = right(i);
-            size_t target = i;
 
-            if (l < data.size() && compare(data[l], data[target]))
-                target = l;
-            if (r < data.size() && compare(data[r], data[target]))
-                target = r;
+            if (l < size && data[l] > data[largest]) largest = l;
+            if (r < size && data[r] > data[largest]) largest = r;
 
-            if (target == i) break;
+            if (largest == i) break;
 
-            std::swap(data[i], data[target]);
-            i = target;
-
-            if (i >= data.size()) break;  
+            std::swap(data[i], data[largest]);
+            i = largest;
         }
     }
+
 
     virtual void siftUp(size_t i) {
         while (i > 0 && compare(data[i], data[parent(i)])) {
@@ -69,18 +66,17 @@ public:
     }
 
     virtual T extractTop() {
-        if (data.empty()) {
-            throw std::runtime_error("Heap is empty");
-        }
+        if (data.empty()) throw std::runtime_error("Heap is empty");
 
         T root = data[0];
-        data[0] = data.back();
-        data.pop_back();
-
-        if (!data.empty()) {
+        if (data.size() == 1) {
+            data.pop_back();
+        }
+        else {
+            data[0] = data.back();
+            data.pop_back();
             heapify(0);
         }
-
         return root;
     }
 

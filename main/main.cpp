@@ -7,8 +7,8 @@
 #include <iomanip>
 #include "../lib_easy_example/easy_example.h"
 #include <vector>
-#include "Heap.h"
-#include "MaxHeap.h"
+#include "../lib_heaps/Heap.h"
+#include "../lib_heaps/MaxHeap.h"
 
 std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
     if (k == 0) return {};
@@ -33,28 +33,24 @@ std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
 
 int main() {
     try {
-        std::vector<int> numbers = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5 };
+        std::vector<int> numbers = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 100, 150000 };
         size_t k = 4;
 
         std::cout << "Original array: ";
-        for (int num : numbers) {
-            std::cout << num << " ";
-        }
+        for (int num : numbers) std::cout << num << " ";
         std::cout << "\n";
 
         auto kLargest = findKLargestElements(numbers, k);
 
         std::cout << k << " largest elements: ";
-        for (int num : kLargest) {
-            std::cout << num << " ";
-        }
+        for (int num : kLargest) std::cout << num << " ";
         std::cout << "\n";
+
+        return 0;
     }
     catch (const std::exception& e) {
-        std::cerr << "Error in main: " << e.what() << std::endl;
+        std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
-
-    return 0;
 }
 #endif // EASY_EXAMPLE
