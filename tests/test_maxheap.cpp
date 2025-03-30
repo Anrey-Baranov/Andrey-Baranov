@@ -1,5 +1,5 @@
 #include <gtest.h>
-#include "MaxHeap.h"
+#include "../lib_heaps/MaxHeap.h"
 
 class TestMaxHeap : public ::testing::Test {
 protected:

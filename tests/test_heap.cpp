@@ -1,7 +1,7 @@
 #include <gtest.h>
-#include "Heap.h"
-#include "MaxHeap.h"
-#include "MinHeap.h"
+#include "../lib_heaps/Heap.h"
+#include "../lib_heaps/MaxHeap.h"
+#include "../lib_heaps/MinHeap.h"
 
 class TestHeap : public ::testing::Test {
 protected:
