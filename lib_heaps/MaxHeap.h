@@ -1,4 +1,8 @@
+#ifndef MAXHEAP_H
+#define MAXHEAP_H
+
 #include "Heap.h"
+
 template <typename T>
 class MaxHeap : public Heap<T> {
 protected:
@@ -8,7 +12,15 @@ protected:
 
 public:
     MaxHeap() = default;
-    MaxHeap(const std::vector<T>& array) : Heap<T>(array) {}
+    explicit MaxHeap(const std::vector<T>& array) : Heap<T>(array) {
+        this->buildHeap(); 
+    }
+
+    using Heap<T>::top;
+    using Heap<T>::extractTop;
+    using Heap<T>::empty;
+    using Heap<T>::size;
+    using Heap<T>::insert;
 
     T max() const { return this->top(); }
     T remove_max() { return this->extractTop(); }
@@ -16,3 +28,5 @@ public:
     T min() const = delete;
     T remove_min() = delete;
 };
+
+#endif // MAXHEAP_H

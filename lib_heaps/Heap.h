@@ -1,10 +1,10 @@
 #ifndef HEAP_H
 #define HEAP_H
 
-#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream> // Для отладки
 
 template <typename T>
 class Heap {
@@ -19,37 +19,43 @@ protected:
 
 public:
     Heap() = default;
-    Heap(const std::vector<T>& array) : data(array) {
+    explicit Heap(const std::vector<T>& array) : data(array) {
         buildHeap();
     }
 
     virtual ~Heap() = default;
 
-    // Построение кучи из неупорядоченного массива
     void buildHeap() {
-        for (int i = data.size() / 2 - 1; i >= 0; --i) {
-            heapify(i);
+        if (data.empty()) return;
+        size_t start = data.size() / 2;
+        while (start > 0) {
+            start--;
+            heapify(start);
         }
     }
 
-    // Просеивание элемента вниз
     virtual void heapify(size_t i) {
-        size_t l = left(i);
-        size_t r = right(i);
-        size_t target = i;
+        if (i >= data.size()) return;  
 
-        if (l < data.size() && compare(data[l], data[target]))
-            target = l;
-        if (r < data.size() && compare(data[r], data[target]))
-            target = r;
+        while (true) {
+            size_t l = left(i);
+            size_t r = right(i);
+            size_t target = i;
 
-        if (target != i) {
+            if (l < data.size() && compare(data[l], data[target]))
+                target = l;
+            if (r < data.size() && compare(data[r], data[target]))
+                target = r;
+
+            if (target == i) break;
+
             std::swap(data[i], data[target]);
-            heapify(target);
+            i = target;
+
+            if (i >= data.size()) break;  
         }
     }
 
-    // Просеивание элемента вверх
     virtual void siftUp(size_t i) {
         while (i > 0 && compare(data[i], data[parent(i)])) {
             std::swap(data[i], data[parent(i)]);
@@ -57,13 +63,11 @@ public:
         }
     }
 
-    // Добавление элемента в кучу
     virtual void insert(const T& value) {
         data.push_back(value);
         siftUp(data.size() - 1);
     }
 
-    // Извлечение корня кучи
     virtual T extractTop() {
         if (data.empty()) {
             throw std::runtime_error("Heap is empty");
@@ -72,13 +76,14 @@ public:
         T root = data[0];
         data[0] = data.back();
         data.pop_back();
+
         if (!data.empty()) {
             heapify(0);
         }
+
         return root;
     }
 
-    // Получение корня кучи без извлечения
     virtual T top() const {
         if (data.empty()) {
             throw std::runtime_error("Heap is empty");
