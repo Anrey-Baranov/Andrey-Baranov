@@ -126,11 +126,13 @@ public:
     void print() const {
         for (size_t i = 0; i < capacity; ++i) {
             if (table[i].status == CellStatus::OCCUPIED) {
-                std::cout << i << ": " << table[i].pair << std::endl;
+                std::cout << i << ": ("
+                    << table[i].pair.first() << ", "
+                    << table[i].pair.second() << ")\n";
             }
         }
     }
-    template class OpenAddressingHashTable<std::string, int>;
 };
+
 
 #endif // OPEN_ADDRESSING_HASH_TABLE_H
