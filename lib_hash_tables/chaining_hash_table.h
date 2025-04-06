@@ -1,19 +1,15 @@
-#include <list>
+#ifndef CHAINING_HASH_TABLE_H
+#define CHAINING_HASH_TABLE_H
+
+#include "../lib_pair/TPair.h"
+#include "../lib_list/TList.h"
 #include <vector>
-#include <string>
 #include <stdexcept>
 
 template <typename TKey, typename TValue>
 class ChainingHashTable {
 private:
-    struct KeyValuePair {
-        TKey key;
-        TValue value;
-
-        KeyValuePair(const TKey& k, const TValue& v) : key(k), value(v) {}
-    };
-
-    std::vector<std::list<KeyValuePair>> table;
+    std::vector<TList<TPair<TKey, TValue>>> table;
     size_t count;
     size_t capacity;
 
@@ -23,15 +19,16 @@ private:
     }
 
     void rehash() {
-        std::vector<std::list<KeyValuePair>> oldTable = table;
+        std::vector<TList<TPair<TKey, TValue>>> oldTable = table;
         capacity *= 2;
         table.clear();
         table.resize(capacity);
         count = 0;
 
         for (auto& chain : oldTable) {
-            for (auto& pair : chain) {
-                insert(pair.key, pair.value);
+            for (auto it = chain.begin(); it != chain.end(); ++it) {
+                TPair<TKey, TValue> pair = *it;
+                insert(pair.first(), pair.second());
             }
         }
     }
@@ -48,21 +45,25 @@ public:
         }
 
         size_t index = hash(key);
-        for (auto& pair : table[index]) {
-            if (pair.key == key) {
+        TList<TPair<TKey, TValue>>& chain = table[index];
+
+        for (auto it = chain.begin(); it != chain.end(); ++it) {
+            if ((*it).first() == key) {
                 throw std::runtime_error("Duplicate key");
             }
         }
 
-        table[index].emplace_back(key, value);
+        chain.pushBack(TPair<TKey, TValue>(key, value));
         count++;
     }
 
     bool find(const TKey& key, TValue& value) const {
         size_t index = hash(key);
-        for (const auto& pair : table[index]) {
-            if (pair.key == key) {
-                value = pair.value;
+        const TList<TPair<TKey, TValue>>& chain = table[index];
+
+        for (auto it = chain.begin(); it != chain.end(); ++it) {
+            if ((*it).first() == key) {
+                value = (*it).second();
                 return true;
             }
         }
@@ -71,33 +72,34 @@ public:
 
     bool remove(const TKey& key) {
         size_t index = hash(key);
-        for (auto it = table[index].begin(); it != table[index].end(); ++it) {
-            if (it->key == key) {
-                table[index].erase(it);
+        TList<TPair<TKey, TValue>>& chain = table[index];
+        TNode<TPair<TKey, TValue>>* node = chain.begin();
+
+        for (size_t i = 0; i < chain.size(); ++i) {
+            if (node->getValue().first() == key) {
+                chain.removeBy(i);
                 count--;
                 return true;
             }
+            node = node->getNext();
         }
         return false;
     }
 
-    size_t size() const {
-        return count;
-    }
-
-    bool empty() const {
-        return count == 0;
-    }
+    size_t size() const { return count; }
+    bool empty() const { return count == 0; }
 
     void print() const {
         for (size_t i = 0; i < capacity; ++i) {
-            if (!table[i].empty()) {
+            if (!table[i].isEmpty()) {
                 std::cout << i << ": ";
-                for (const auto& pair : table[i]) {
-                    std::cout << pair.key << " -> " << pair.value << "; ";
+                for (auto it = table[i].begin(); it != table[i].end(); ++it) {
+                    std::cout << *it << "; ";
                 }
                 std::cout << std::endl;
             }
         }
     }
 };
+
+#endif // CHAINING_HASH_TABLE_H
