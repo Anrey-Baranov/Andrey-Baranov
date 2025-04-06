@@ -1,161 +1,160 @@
-#ifndef OPEN_ADDRESSING_HASH_TABLE_H
-#define OPEN_ADDRESSING_HASH_TABLE_H
+#ifndef LIB_HASH_OPENHASHTABLE_H_
+#define LIB_HASH_OPENHASHTABLE_H_
 
-#include "../lib_pair/TPair.h"
 #include <vector>
 #include <stdexcept>
-#include <functional> // Добавляем для std::hash
+#include "../lib_pair/TPair.h"
+
+enum class CellStatus {
+    FREE,
+    OCCUPIED,
+    DELETED
+};
 
 template <typename TKey, typename TValue>
-class OpenAddressingHashTable {
-private:
-    enum class CellStatus {
-        FREE,
-        OCCUPIED,
-        DELETED
-    };
-
-    struct HashCell {
-        TPair<TKey, TValue> pair;
+class TOpenHashTable {
+    struct TCell {
+        TPair<TKey, TValue> data;
         CellStatus status;
-
-        HashCell() : status(CellStatus::FREE), pair() {}
+        
+        TCell() : status(CellStatus::FREE) {}
     };
 
-    std::vector<HashCell> table;
+    std::vector<TCell> table;
     size_t count;
     size_t capacity;
 
-    // Универсальная хеш-функция для любого типа ключа
-    size_t hash1(const std::string& key) const {
-        if (capacity == 0) return 0;
-        if (key.empty()) return 0;
-        std::hash<std::string> hasher;
-        return hasher(key) % capacity;
+    size_t hash(const TKey& key) const {
+        if (capacity == 0) throw std::runtime_error("Zero capacity in hash table");
+        return std::hash<TKey>{}(key) % capacity;
     }
 
-    size_t hash2(const TKey& key) const {
-        if (capacity <= 1) return 1;
-        std::hash<TKey> hasher;
-        return 1 + (hasher(key) % (capacity - 1));
-    }
-
-
-    size_t findSlot(const TKey& key, bool forInsert = false) const {
-        if (capacity == 0) return capacity;
-
-        size_t h1 = hash1(key);
-        size_t h2 = hash2(key);
-        size_t i = 0;
-        size_t firstDeleted = capacity;
-
-        while (i < capacity) {
-            size_t index = (h1 + i * h2) % capacity;
-            const HashCell& cell = table[index];
-
-            if (cell.status == CellStatus::FREE) {
-                return forInsert ? (firstDeleted != capacity ? firstDeleted : index) : capacity;
-            }
-            if (cell.status == CellStatus::DELETED) {
-                if (firstDeleted == capacity) {
-                    firstDeleted = index;
-                }
-            }
-            else if (cell.pair.first() == key) {
-                return index;
-            }
-            i++;
-        }
-        return forInsert ? firstDeleted : capacity;
+    size_t next(size_t index) const {
+        return (index + 1) % capacity;
     }
 
     void rehash() {
-        if (capacity == 0) return; // Проверка на нулевую емкость
-
-        std::vector<HashCell> oldTable = std::move(table);
-        capacity = capacity == 0 ? 4 : capacity * 2;
-        table.assign(capacity, HashCell()); // Инициализация новых ячеек
-        count = 0;
-
-        for (const auto& cell : oldTable) {
-            if (cell.status == CellStatus::OCCUPIED) {
-                insert(cell.pair.first(), cell.pair.second()); // Используем публичный интерфейс
+        size_t newCapacity = capacity * 2;
+        std::vector<TCell> newTable(newCapacity);
+        
+        for (size_t i = 0; i < capacity; ++i) {
+            if (table[i].status == CellStatus::OCCUPIED) {
+                size_t newIndex = std::hash<TKey>{}(table[i].data.first()) % newCapacity;
+                
+                while (newTable[newIndex].status == CellStatus::OCCUPIED) {
+                    newIndex = next(newIndex);
+                }
+                
+                newTable[newIndex].data = table[i].data;
+                newTable[newIndex].status = CellStatus::OCCUPIED;
             }
         }
+        
+        table = std::move(newTable);
+        capacity = newCapacity;
     }
 
-
 public:
-    OpenAddressingHashTable(size_t initialCapacity = 8)
-        : count(0), capacity(std::max(initialCapacity, static_cast<size_t>(4))) {
+    TOpenHashTable(size_t initialCapacity = 16) : count(0), capacity(initialCapacity) {
+        if (capacity == 0) capacity = 1;
         table.resize(capacity);
-        for (auto& cell : table) {
-            cell.status = CellStatus::FREE;
-            cell.pair = TPair<TKey, TValue>(); // Явная инициализация
-        }
     }
 
     void insert(const TKey& key, const TValue& value) {
-        if (count >= capacity * 0.7) {
+        if (count * 2 >= capacity) {
             rehash();
         }
-        size_t index = findSlot(key, true);
-        if (index == capacity) {
-            throw std::runtime_error("Hash table is full");
+        
+        size_t index = hash(key);
+        size_t startIndex = index;
+        bool foundDeleted = false;
+        size_t deletedIndex = 0;
+        
+        do {
+            if (table[index].status == CellStatus::OCCUPIED) {
+                if (table[index].data.first() == key) {
+                    throw std::runtime_error("Duplicate key");
+                }
+            } 
+            else if (table[index].status == CellStatus::DELETED) {
+                if (!foundDeleted) {
+                    foundDeleted = true;
+                    deletedIndex = index;
+                }
+            } 
+            else {
+                if (foundDeleted) {
+                    index = deletedIndex;
+                }
+                table[index].data.make_pair(key, value);
+                table[index].status = CellStatus::OCCUPIED;
+                count++;
+                return;
+            }
+            
+            index = next(index);
+        } while (index != startIndex);
+        
+        if (foundDeleted) {
+            table[deletedIndex].data.make_pair(key, value);
+            table[deletedIndex].status = CellStatus::OCCUPIED;
+            count++;
+            return;
         }
-
-        // Проверка на дубликат
-        if (table[index].status == CellStatus::OCCUPIED && table[index].pair.first() == key) {
-            throw std::runtime_error("Duplicate key");
-        }
-
-        table[index].pair.make_pair(key, value);
-        table[index].status = CellStatus::OCCUPIED;
-        count++;
+        
+        throw std::runtime_error("Table is full");
     }
 
     bool find(const TKey& key, TValue& value) const {
-        if (capacity == 0) return false;
-        size_t index = findSlot(key);
-        if (index == capacity || table[index].status != CellStatus::OCCUPIED) {
-            return false;
-        }
-        value = table[index].pair.second();
-        return true;
-    }
-    ~OpenAddressingHashTable() {
-        clear();
-    }
-
-    void clear() {
-        table.clear();
-        count = 0;
-        capacity = 0;
-    }
-    bool remove(const TKey& key) {
-        if (capacity == 0) return false;
-        size_t index = findSlot(key);
-        if (index == capacity || table[index].status != CellStatus::OCCUPIED) {
-            return false;
-        }
-        table[index].status = CellStatus::DELETED;
-        count--;
-        return true;
-    }
-
-    size_t size() const { return count; }
-    bool empty() const { return count == 0; }
-
-    void print() const {
-        for (size_t i = 0; i < capacity; ++i) {
-            if (table[i].status == CellStatus::OCCUPIED) {
-                std::cout << i << ": ("
-                    << table[i].pair.first() << ", "
-                    << table[i].pair.second() << ")\n";
+        size_t index = hash(key);
+        size_t startIndex = index;
+        
+        do {
+            if (table[index].status == CellStatus::OCCUPIED && 
+                table[index].data.first() == key) {
+                value = table[index].data.second();
+                return true;
             }
-        }
+            
+            if (table[index].status == CellStatus::FREE) {
+                break;
+            }
+            
+            index = next(index);
+        } while (index != startIndex);
+        
+        return false;
+    }
+
+    bool remove(const TKey& key) {
+        size_t index = hash(key);
+        size_t startIndex = index;
+        
+        do {
+            if (table[index].status == CellStatus::OCCUPIED && 
+                table[index].data.first() == key) {
+                table[index].status = CellStatus::DELETED;
+                count--;
+                return true;
+            }
+            
+            if (table[index].status == CellStatus::FREE) {
+                break;
+            }
+            
+            index = next(index);
+        } while (index != startIndex);
+        
+        return false;
+    }
+
+    size_t size() const {
+        return count;
+    }
+
+    bool empty() const {
+        return count == 0;
     }
 };
 
-
-#endif // OPEN_ADDRESSING_HASH_TABLE_H
+#endif // LIB_HASH_OPENHASHTABLE_H_
