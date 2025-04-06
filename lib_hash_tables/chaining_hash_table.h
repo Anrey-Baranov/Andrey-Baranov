@@ -22,8 +22,8 @@ class TChainHashTable {
 
         for (auto& chain : table) {
             for (auto it = chain.begin(); it != chain.end(); ++it) {
-                TPair<TKey, TValue> pair = *it; // Получаем пару через разыменование
-                size_t newIndex = std::hash<TKey>{}(pair.first()) % newCapacity;
+                TPair<TKey, TValue> pair = *it;
+                size_t newIndex = hash(pair.first()) % newCapacity;
                 newTable[newIndex].pushBack(pair);
             }
         }
@@ -48,7 +48,7 @@ public:
 
         // Проверка на дубликаты
         for (auto it = chain.begin(); it != chain.end(); ++it) {
-            if ((*it).first() == key) { // Доступ через разыменование
+            if ((*it).first() == key) {
                 throw std::runtime_error("Duplicate key");
             }
         }
@@ -61,8 +61,10 @@ public:
         size_t index = hash(key);
         const auto& chain = table[index];
 
-        for (auto it = chain.begin(); it != chain.end(); ++it) {
-            if ((*it).first() == key) { // Доступ через разыменование
+        // Создаем временную копию списка для итерации
+        TList<TPair<TKey, TValue>> tempList = chain;
+        for (auto it = tempList.begin(); it != tempList.end(); ++it) {
+            if ((*it).first() == key) {
                 value = (*it).second();
                 return true;
             }
@@ -77,7 +79,7 @@ public:
         size_t pos = 0;
 
         for (auto it = chain.begin(); it != chain.end(); ++it, ++pos) {
-            if ((*it).first() == key) { // Доступ через разыменование
+            if ((*it).first() == key) {
                 chain.removeBy(pos);
                 count--;
                 return true;
