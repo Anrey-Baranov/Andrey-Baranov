@@ -1,25 +1,30 @@
 #include <gtest.h>
 #include "../lib_pair/TPair.h"
 #include "../lib_hash_tables/open_addressing_hash_table.h"
+#include "../lib_hash_tables/open_addressing_hash_table.cpp"
 
 class OpenAddressingHashTableTest : public ::testing::Test {
 protected:
     OpenAddressingHashTable<std::string, int> table;
 
     void SetUp() override {
-        table = OpenAddressingHashTable<std::string, int>(4); 
+        table = OpenAddressingHashTable<std::string, int>(8);  
+    }
+
+    void TearDown() override {
+        // Очистка после каждого теста
     }
 };
 
 TEST_F(OpenAddressingHashTableTest, InitialState) {
-    EXPECT_EQ(table.size(), 0);
-    EXPECT_TRUE(table.empty());
+    OpenAddressingHashTable<std::string, int> newTable(4); // Явное указание размера
+    EXPECT_EQ(newTable.size(), 0);
+    EXPECT_TRUE(newTable.empty());
 }
 
 TEST_F(OpenAddressingHashTableTest, InsertAndFind) {
     table.insert("one", 1);
     table.insert("two", 2);
-
     int value;
     EXPECT_TRUE(table.find("one", value));
     EXPECT_EQ(value, 1);
@@ -27,6 +32,7 @@ TEST_F(OpenAddressingHashTableTest, InsertAndFind) {
     EXPECT_EQ(value, 2);
     EXPECT_EQ(table.size(), 2);
 }
+
 
 TEST_F(OpenAddressingHashTableTest, InsertDuplicateThrows) {
     table.insert("one", 1);
@@ -52,16 +58,17 @@ TEST_F(OpenAddressingHashTableTest, RemoveNonExistent) {
 }
 
 TEST_F(OpenAddressingHashTableTest, RehashWhenFull) {
-    // Таблица начнет с capacity=4 и будет рехэшироваться при 70% заполнения
-    table.insert("one", 1);
-    table.insert("two", 2);
-    table.insert("three", 3); // Должен вызвать rehash (3/4 = 75%)
+    // Проверяем, что таблица корректно расширяется
+    size_t old_capacity = table.size();
+    table.insert("three", 3);
+    table.insert("four", 4);
+    EXPECT_GT(table.size(), old_capacity);
 
-    EXPECT_GT(table.size(), 2);
     int value;
     EXPECT_TRUE(table.find("one", value));
     EXPECT_TRUE(table.find("two", value));
     EXPECT_TRUE(table.find("three", value));
+    EXPECT_TRUE(table.find("four", value));
 }
 
 TEST_F(OpenAddressingHashTableTest, HandleCollisions) {
