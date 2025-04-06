@@ -1,6 +1,8 @@
-#include <iostream>
+#ifndef OPEN_ADDRESSING_HASH_TABLE_H
+#define OPEN_ADDRESSING_HASH_TABLE_H
+
+#include "../lib_pair/TPair.h"
 #include <vector>
-#include <string>
 #include <stdexcept>
 
 template <typename TKey, typename TValue>
@@ -13,8 +15,7 @@ private:
     };
 
     struct HashCell {
-        TKey key;
-        TValue value;
+        TPair<TKey, TValue> pair;
         CellStatus status;
 
         HashCell() : status(CellStatus::FREE) {}
@@ -29,18 +30,16 @@ private:
         return hasher(key) % capacity;
     }
 
-    // Вторичная хэш-функция (должна возвращать значение, взаимно простое с capacity)
     size_t hash2(const TKey& key) const {
         std::hash<TKey> hasher;
         return 1 + (hasher(key) % (capacity - 1));
     }
 
-    // Поиск следующего свободного слота
     size_t findSlot(const TKey& key, bool forInsert = false) const {
         size_t h1 = hash1(key);
         size_t h2 = hash2(key);
         size_t i = 0;
-        size_t firstDeleted = capacity; // Индекс первого удаленного элемента
+        size_t firstDeleted = capacity;
 
         while (i < capacity) {
             size_t index = (h1 + i * h2) % capacity;
@@ -54,7 +53,7 @@ private:
                     firstDeleted = index;
                 }
             }
-            else if (cell.key == key) {
+            else if (cell.pair.first() == key) {
                 return index;
             }
             i++;
@@ -72,7 +71,7 @@ private:
 
         for (const auto& cell : oldTable) {
             if (cell.status == CellStatus::OCCUPIED) {
-                insert(cell.key, cell.value);
+                insert(cell.pair.first(), cell.pair.second());
             }
         }
     }
@@ -93,12 +92,11 @@ public:
             throw std::runtime_error("Hash table is full");
         }
 
-        if (table[index].status == CellStatus::OCCUPIED && table[index].key == key) {
+        if (table[index].status == CellStatus::OCCUPIED && table[index].pair.first() == key) {
             throw std::runtime_error("Duplicate key");
         }
 
-        table[index].key = key;
-        table[index].value = value;
+        table[index].pair.make_pair(key, value);
         table[index].status = CellStatus::OCCUPIED;
         count++;
     }
@@ -108,7 +106,7 @@ public:
         if (index == capacity) {
             return false;
         }
-        value = table[index].value;
+        value = table[index].pair.second();
         return true;
     }
 
@@ -122,19 +120,16 @@ public:
         return true;
     }
 
-    size_t size() const {
-        return count;
-    }
-
-    bool empty() const {
-        return count == 0;
-    }
+    size_t size() const { return count; }
+    bool empty() const { return count == 0; }
 
     void print() const {
         for (size_t i = 0; i < capacity; ++i) {
             if (table[i].status == CellStatus::OCCUPIED) {
-                std::cout << i << ": " << table[i].key << " -> " << table[i].value << std::endl;
+                std::cout << i << ": " << table[i].pair << std::endl;
             }
         }
     }
 };
+
+#endif // OPEN_ADDRESSING_HASH_TABLE_H
