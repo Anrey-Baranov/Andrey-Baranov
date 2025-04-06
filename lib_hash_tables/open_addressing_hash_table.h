@@ -130,6 +130,7 @@ public:
             }
         }
     }
+    template class OpenAddressingHashTable<std::string, int>;
 };
 
 #endif // OPEN_ADDRESSING_HASH_TABLE_H
