@@ -124,7 +124,6 @@ public:
         std::cout << std::endl;
     }
 
-    // Дополнительные методы для удобства
     BTreeNode<T>* min() {
         return minValueNode(_head);
     }

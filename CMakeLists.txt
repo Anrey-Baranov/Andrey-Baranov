@@ -20,6 +20,7 @@ add_subdirectory(lib_unsort_tabel)
 add_subdirectory(lib_heaps)
 add_subdirectory(lib_hash_tables)
 add_subdirectory(lib_bstree)
+add_subdirectory(lib_tbst_table)
 add_subdirectory(main)
 
 option(BTEST "build test?" ON)
