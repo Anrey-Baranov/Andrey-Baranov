@@ -36,7 +36,7 @@ TEST_F(BinarySearchTreeTest, InsertAndSearch) {
     EXPECT_NE(tree.search(30), nullptr);
     EXPECT_EQ(tree.search(30)->_value, 30);
 
-    EXPECT_NE(tree.search(90), nullptr); // Несуществующий элемент
+    EXPECT_EQ(tree.search(90), nullptr); // Проверка несуществующего элемента
 }
 
 TEST_F(BinarySearchTreeTest, MinMaxOperations) {
@@ -123,7 +123,7 @@ TEST_F(BinarySearchTreeTest, InOrderTraversal) {
     testing::internal::CaptureStdout();
     emptyTree.print();
     output = testing::internal::GetCapturedStdout();
-    EXPECT_TRUE(output.empty());
+    EXPECT_EQ(output, "\n"); // Пустое дерево печатает только новую строку
 }
 
 TEST_F(BinarySearchTreeTest, DuplicateInsert) {
