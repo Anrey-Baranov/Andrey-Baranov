@@ -6,51 +6,56 @@
 #include <iostream>
 #include <iomanip>
 #include "../lib_easy_example/easy_example.h"
-#include <vector>
-#include "../lib_heaps/Heap.h"
-#include "../lib_heaps/MaxHeap.h"
-
-std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
-    if (k == 0) return {};
-    if (k >= arr.size()) return arr;
-
-    try {
-        MaxHeap<int> maxHeap(arr);
-        std::vector<int> result;
-        result.reserve(k);
-
-        for (size_t i = 0; i < k && !maxHeap.empty(); ++i) {
-            result.push_back(maxHeap.remove_max());
-        }
-
-        return result;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error in findKLargestElements: " << e.what() << std::endl;
-        return {};
-    }
-}
-
+#include "../lib_bstree/TBinSearchTree.h" 
 int main() {
-    try {
-        std::vector<int> numbers = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 100, 150000 };
-        size_t k = 4;
+	BSearchTree<int> tree;
+	tree.insert(50);
+	tree.insert(30);
+	tree.insert(70);
+	tree.insert(40);
 
-        std::cout << "Original array: ";
-        for (int num : numbers) std::cout << num << " ";
-        std::cout << "\n";
-
-        auto kLargest = findKLargestElements(numbers, k);
-
-        std::cout << k << " largest elements: ";
-        for (int num : kLargest) std::cout << num << " ";
-        std::cout << "\n";
-
-        return 0;
-    }
-    catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        return 1;
-    }
 }
+//std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
+//    if (k == 0) return {};
+//    if (k >= arr.size()) return arr;
+//
+//    try {
+//        MaxHeap<int> maxHeap(arr);
+//        std::vector<int> result;
+//        result.reserve(k);
+//
+//        for (size_t i = 0; i < k && !maxHeap.empty(); ++i) {
+//            result.push_back(maxHeap.remove_max());
+//        }
+//
+//        return result;
+//    }
+//    catch (const std::exception& e) {
+//        std::cerr << "Error in findKLargestElements: " << e.what() << std::endl;
+//        return {};
+//    }
+//}
+//
+//int main() {
+//    try {
+//        std::vector<int> numbers = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 100, 150000 };
+//        size_t k = 4;
+//
+//        std::cout << "Original array: ";
+//        for (int num : numbers) std::cout << num << " ";
+//        std::cout << "\n";
+//
+//        auto kLargest = findKLargestElements(numbers, k);
+//
+//        std::cout << k << " largest elements: ";
+//        for (int num : kLargest) std::cout << num << " ";
+//        std::cout << "\n";
+//
+//        return 0;
+//    }
+//    catch (const std::exception& e) {
+//        std::cerr << "Error: " << e.what() << std::endl;
+//        return 1;
+//    }
+//}
 #endif // EASY_EXAMPLE

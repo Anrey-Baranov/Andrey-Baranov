@@ -1,3 +1,6 @@
+#ifndef TBINSEARCHTREE_H
+#define TBINSEARCHTREE_H
+
 #include <iostream>
 #include <stdexcept>
 #include <queue>
@@ -6,15 +9,18 @@ template<class T>
 class BTreeNode {
 public:
     T _value;
-    BTreeNode<T>* left, * right;
+    BTreeNode<T>* left;
+    BTreeNode<T>* right;
 
     BTreeNode(T value) : _value(value), left(nullptr), right(nullptr) {}
 };
 
 template <class T>
 class BSearchTree {
+private:
     BTreeNode<T>* _head;
 
+    // Приватные методы
     BTreeNode<T>* _search(BTreeNode<T>* node, T val) const {
         if (node == nullptr || node->_value == val) {
             return node;
@@ -38,7 +44,7 @@ class BSearchTree {
         return node;
     }
 
-    BTreeNode<T>* minValueNode(BTreeNode<T>* node) {
+    BTreeNode<T>* minValueNode(BTreeNode<T>* node) const {
         BTreeNode<T>* current = node;
         while (current && current->left != nullptr) {
             current = current->left;
@@ -46,7 +52,7 @@ class BSearchTree {
         return current;
     }
 
-    BTreeNode<T>* maxValueNode(BTreeNode<T>* node) {
+    BTreeNode<T>* maxValueNode(BTreeNode<T>* node) const {
         BTreeNode<T>* current = node;
         while (current && current->right != nullptr) {
             current = current->right;
@@ -82,11 +88,12 @@ class BSearchTree {
         return node;
     }
 
-    void _clear(BTreeNode<T>* node) noexcept {
+    void _clear(BTreeNode<T>*& node) noexcept {
         if (node != nullptr) {
             _clear(node->left);
             _clear(node->right);
             delete node;
+            node = nullptr;
         }
     }
 
@@ -99,9 +106,13 @@ class BSearchTree {
     }
 
 public:
+    // Объявляем тестовый класс другом
+    friend class BSearchTreePrivateTest;
+
     BSearchTree() : _head(nullptr) {}
     ~BSearchTree() { clear(); }
 
+    // Публичные методы
     BTreeNode<T>* search(T val) const noexcept {
         return _search(_head, val);
     }
@@ -116,7 +127,6 @@ public:
 
     void clear() noexcept {
         _clear(_head);
-        _head = nullptr;
     }
 
     void print() const noexcept {
@@ -124,15 +134,14 @@ public:
         std::cout << std::endl;
     }
 
-    BTreeNode<T>* min() {
+    BTreeNode<T>* min() const {
         return minValueNode(_head);
     }
 
-    BTreeNode<T>* max() {
+    BTreeNode<T>* max() const {
         return maxValueNode(_head);
     }
 
-    // Обход в ширину (уровневой обход)
     void levelOrder() const noexcept {
         if (_head == nullptr) return;
 
@@ -155,3 +164,5 @@ public:
         std::cout << std::endl;
     }
 };
+
+#endif // TBINSEARCHTREE_H
