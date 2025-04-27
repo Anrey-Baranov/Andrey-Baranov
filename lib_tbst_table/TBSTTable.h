@@ -1,6 +1,7 @@
 #pragma once
 #include "../lib_bstree/TBinSearchTree.h"
 #include "../lib_pair/TPair.h" 
+#include <stack>
 
 template <typename KeyType, typename ValueType>
 class ComparablePair {
@@ -24,7 +25,6 @@ public:
     const KeyType& first() const { return pair.first(); }
     const ValueType& second() const { return pair.second(); }
 
-    // Добавляем метод для получения исходной пары
     const TPair<KeyType, ValueType>& getPair() const { return pair; }
 };
 
@@ -35,7 +35,15 @@ private:
 
 public:
     void insert(const KeyType& key, const ValueType& value) {
-        _data.insert(ComparablePair<KeyType, ValueType>(key, value));
+        ComparablePair<KeyType, ValueType> newPair(key, value);
+        auto found = _data.search(newPair);
+        if (found) {
+            // Если ключ уже существует, обновляем значение
+            const_cast<ComparablePair<KeyType, ValueType>&>(found->_value) = newPair;
+        }
+        else {
+            _data.insert(newPair);
+        }
     }
 
     bool find(const KeyType& key, ValueType& value) const {
@@ -67,29 +75,36 @@ public:
 
     size_t size() const {
         size_t count = 0;
-        std::queue<BTreeNode<ComparablePair<KeyType, ValueType>>*> q;
-        if (auto root = _data.min()) {
-            q.push(root);
-            while (!q.empty()) {
-                auto node = q.front();
-                q.pop();
-                count++;
-                if (node->left) q.push(node->left);
-                if (node->right) q.push(node->right);
+        std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> stack;
+        auto current = _data.min();
+
+        while (current || !stack.empty()) {
+            while (current) {
+                stack.push(current);
+                current = current->left;
             }
+
+            current = stack.top();
+            stack.pop();
+            count++;
+
+            current = current->right;
         }
         return count;
     }
 
     class iterator {
+        std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> stack;
         BTreeNode<ComparablePair<KeyType, ValueType>>* current;
-        std::queue<BTreeNode<ComparablePair<KeyType, ValueType>>*> nodes;
 
     public:
-        iterator(BTreeNode<ComparablePair<KeyType, ValueType>>* root) : current(nullptr) {
-            if (root) {
-                nodes.push(root);
-                operator++();
+        iterator(BTreeNode<ComparablePair<KeyType, ValueType>>* root) : current(root) {
+            if (current) {
+                // Переходим к самому левому узлу
+                while (current->left) {
+                    stack.push(current);
+                    current = current->left;
+                }
             }
         }
 
@@ -98,14 +113,19 @@ public:
         }
 
         iterator& operator++() {
-            if (nodes.empty()) {
-                current = nullptr;
+            if (current->right) {
+                current = current->right;
+                while (current->left) {
+                    stack.push(current);
+                    current = current->left;
+                }
+            }
+            else if (!stack.empty()) {
+                current = stack.top();
+                stack.pop();
             }
             else {
-                current = nodes.front();
-                nodes.pop();
-                if (current->left) nodes.push(current->left);
-                if (current->right) nodes.push(current->right);
+                current = nullptr;
             }
             return *this;
         }
@@ -115,6 +135,15 @@ public:
         }
     };
 
-    iterator begin() { return iterator(_data.min()); }
+    iterator begin() {
+        auto minNode = _data.min();
+        if (minNode) {
+            while (minNode->left) {
+                minNode = minNode->left;
+            }
+        }
+        return iterator(minNode);
+    }
+
     iterator end() { return iterator(nullptr); }
 };
