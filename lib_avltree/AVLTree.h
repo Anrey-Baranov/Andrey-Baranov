@@ -22,9 +22,10 @@ public:
 template <class T>
 class AVLTree {
 private:
+    friend class AVLTreePrivateTest;
+
     AVLTreeNode<T>* _root;
 
-    // Вспомогательные функции
     int height(AVLTreeNode<T>* node) const {
         return node ? node->height : 0;
     }
@@ -60,7 +61,6 @@ private:
         return y;
     }
 
-    // Балансировка
     AVLTreeNode<T>* balance(AVLTreeNode<T>* node) {
         updateHeight(node);
 
@@ -82,7 +82,6 @@ private:
         return node;
     }
 
-    // Поиск
     AVLTreeNode<T>* _search(AVLTreeNode<T>* node, T val) const {
         if (node == nullptr || node->_value == val) {
             return node;
@@ -93,7 +92,6 @@ private:
         return _search(node->right, val);
     }
 
-    // Вставка
     AVLTreeNode<T>* _insert(AVLTreeNode<T>* node, T val) {
         if (node == nullptr) {
             return new AVLTreeNode<T>(val);
@@ -149,7 +147,6 @@ private:
         return balance(node);
     }
 
-    // Очистка
     void _clear(AVLTreeNode<T>*& node) noexcept {
         if (node != nullptr) {
             _clear(node->left);
@@ -159,7 +156,6 @@ private:
         }
     }
 
-    // ASCII-визуализация дерева
     void _printTree(AVLTreeNode<T>* node, const std::string& prefix = "", bool isLeft = false) const {
         if (node == nullptr) return;
 
