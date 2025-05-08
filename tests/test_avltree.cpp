@@ -105,17 +105,35 @@ TEST_F(AVLTreePrivateTest, PrivateHeightAndBalance) {
 }
 
 TEST_F(AVLTreePrivateTest, PrivateRotations) {
+    // Тестирование правого поворота
     AVLTreeNode<int>* node = new AVLTreeNode<int>(30);
     node->left = new AVLTreeNode<int>(20);
     node->left->left = new AVLTreeNode<int>(10);
 
+    // Обновим высоты перед поворотом
+    node->left->left->height = 1;
+    node->left->height = 2;
+    node->height = 3;
+
     node = test_rotateRight(node);
     EXPECT_EQ(node->_value, 20);
     EXPECT_EQ(node->right->_value, 30);
+    EXPECT_EQ(node->left->_value, 10);
+
+    // Тестирование левого поворота
+    node = new AVLTreeNode<int>(10);
+    node->right = new AVLTreeNode<int>(20);
+    node->right->right = new AVLTreeNode<int>(30);
+
+    // Обновим высоты перед поворотом
+    node->right->right->height = 1;
+    node->right->height = 2;
+    node->height = 3;
 
     node = test_rotateLeft(node);
     EXPECT_EQ(node->_value, 20);
     EXPECT_EQ(node->left->_value, 10);
+    EXPECT_EQ(node->right->_value, 30);
 }
 
 TEST_F(AVLTreePrivateTest, PrivateBalance) {
