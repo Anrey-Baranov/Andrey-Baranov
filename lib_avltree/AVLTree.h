@@ -1,43 +1,46 @@
-#include <algorithm>
-#include <iostream>
+#ifndef TAVLTREE_H
+#define TAVLTREE_H
 
-template <typename T>
+#include <iostream>
+#include <stdexcept>
+#include <queue>
+#include <vector>
+#include <algorithm>
+
+template<class T>
+class AVLTreeNode {
+public:
+    T _value;
+    AVLTreeNode<T>* left;
+    AVLTreeNode<T>* right;
+    int height;
+
+    AVLTreeNode(T value) : _value(value), left(nullptr), right(nullptr), height(1) {}
+};
+
+template <class T>
 class AVLTree {
 private:
-    struct AVLNode {
-        AVLNode* _left;
-        AVLNode* _right;
-        AVLNode* _parent;
-        int _height;
-        T _data;
+    AVLTreeNode<T>* _root;
 
-        AVLNode(const T& data)
-            : _left(nullptr), _right(nullptr), _parent(nullptr), _height(1), _data(data) {
-        }
-    };
-
-    AVLNode* _root;
-
-    int height(AVLNode* node) const {
-        return node ? node->_height : 0;
+    // Вспомогательные функции
+    int height(AVLTreeNode<T>* node) const {
+        return node ? node->height : 0;
     }
 
-    int balanceFactor(AVLNode* node) const {
-        return height(node->_right) - height(node->_left);
+    int balanceFactor(AVLTreeNode<T>* node) const {
+        return height(node->right) - height(node->left);
     }
 
-    void updateHeight(AVLNode* node) {
-        node->_height = std::max(height(node->_left), height(node->_right)) + 1;
+    void updateHeight(AVLTreeNode<T>* node) {
+        node->height = std::max(height(node->left), height(node->right)) + 1;
     }
 
     // Повороты
-    AVLNode* rotateRight(AVLNode* y) {
-        AVLNode* x = y->_left;
-        y->_left = x->_right;
-        if (x->_right) x->_right->_parent = y;
-        x->_right = y;
-        x->_parent = y->_parent;
-        y->_parent = x;
+    AVLTreeNode<T>* rotateRight(AVLTreeNode<T>* y) {
+        AVLTreeNode<T>* x = y->left;
+        y->left = x->right;
+        x->right = y;
 
         updateHeight(y);
         updateHeight(x);
@@ -45,13 +48,10 @@ private:
         return x;
     }
 
-    AVLNode* rotateLeft(AVLNode* x) {
-        AVLNode* y = x->_right;
-        x->_right = y->_left;
-        if (y->_left) y->_left->_parent = x;
-        y->_left = x;
-        y->_parent = x->_parent;
-        x->_parent = y;
+    AVLTreeNode<T>* rotateLeft(AVLTreeNode<T>* x) {
+        AVLTreeNode<T>* y = x->right;
+        x->right = y->left;
+        y->left = x;
 
         updateHeight(x);
         updateHeight(y);
@@ -59,197 +59,218 @@ private:
         return y;
     }
 
-    // Балансировка узла
-    AVLNode* balance(AVLNode* node) {
+    // Балансировка
+    AVLTreeNode<T>* balance(AVLTreeNode<T>* node) {
         updateHeight(node);
 
         int bf = balanceFactor(node);
 
-        // Left heavy
         if (bf == -2) {
-            if (balanceFactor(node->_left) > 0) {
-                // LR case
-                node->_left = rotateLeft(node->_left);
+            if (balanceFactor(node->left) > 0) {
+                node->left = rotateLeft(node->left);
             }
-            // LL case
             return rotateRight(node);
         }
-        // Right heavy
         else if (bf == 2) {
-            if (balanceFactor(node->_right) < 0) {
-                // RL case
-                node->_right = rotateRight(node->_right);
+            if (balanceFactor(node->right) < 0) {
+                node->right = rotateRight(node->right);
             }
-            // RR case
             return rotateLeft(node);
         }
 
         return node;
     }
 
-    AVLNode* insert(AVLNode* node, AVLNode* parent, const T& data) {
-        if (!node) {
-            AVLNode* newNode = new AVLNode(data);
-            newNode->_parent = parent;
-            return newNode;
-        }
-
-        if (data < node->_data) {
-            node->_left = insert(node->_left, node, data);
-        }
-        else if (node->_data < data) {
-            node->_right = insert(node->_right, node, data);
-        }
-        else {
-            // Дубликаты не допускаются
+    // Поиск
+    AVLTreeNode<T>* _search(AVLTreeNode<T>* node, T val) const {
+        if (node == nullptr || node->_value == val) {
             return node;
         }
-
-        return balance(node);
+        if (val < node->_value) {
+            return _search(node->left, val);
+        }
+        return _search(node->right, val);
     }
 
-    // Поиск минимального узла в поддереве
-    AVLNode* findMin(AVLNode* node) const {
-        while (node && node->_left) {
-            node = node->_left;
+    // Вставка
+    AVLTreeNode<T>* _insert(AVLTreeNode<T>* node, T val) {
+        if (node == nullptr) {
+            return new AVLTreeNode<T>(val);
         }
-        return node;
-    }
-
-    // Удаление узла
-    AVLNode* remove(AVLNode* node, const T& data) {
-        if (!node) return nullptr;
-
-        if (data < node->_data) {
-            node->_left = remove(node->_left, data);
+        if (val < node->_value) {
+            node->left = _insert(node->left, val);
         }
-        else if (node->_data < data) {
-            node->_right = remove(node->_right, data);
+        else if (val > node->_value) {
+            node->right = _insert(node->right, val);
         }
         else {
-            // Найден узел для удаления
-            if (!node->_left || !node->_right) {
-                AVLNode* temp = node->_left ? node->_left : node->_right;
-
-                if (!temp) {
-                    temp = node;
-                    node = nullptr;
-                }
-                else {
-                    // Один потомок
-                    temp->_parent = node->_parent;
-                    *node = *temp; // Копируем данные
-                }
-
-                delete temp;
-            }
-            else {
-                // Два потомка
-                AVLNode* temp = findMin(node->_right);
-                node->_data = temp->_data;
-                node->_right = remove(node->_right, temp->_data);
-            }
+            return node; // Дубликаты не допускаются
         }
-
-        if (!node) return node;
 
         return balance(node);
     }
 
-    // Очистка дерева
-    void clear(AVLNode* node) {
-        if (node) {
-            clear(node->_left);
-            clear(node->_right);
+    // Удаление
+    AVLTreeNode<T>* minValueNode(AVLTreeNode<T>* node) const {
+        AVLTreeNode<T>* current = node;
+        while (current && current->left != nullptr) {
+            current = current->left;
+        }
+        return current;
+    }
+
+    AVLTreeNode<T>* _erase(AVLTreeNode<T>* node, T val) {
+        if (node == nullptr) return node;
+
+        if (val < node->_value) {
+            node->left = _erase(node->left, val);
+        }
+        else if (val > node->_value) {
+            node->right = _erase(node->right, val);
+        }
+        else {
+            if (node->left == nullptr) {
+                AVLTreeNode<T>* temp = node->right;
+                delete node;
+                return temp;
+            }
+            else if (node->right == nullptr) {
+                AVLTreeNode<T>* temp = node->left;
+                delete node;
+                return temp;
+            }
+
+            AVLTreeNode<T>* temp = minValueNode(node->right);
+            node->_value = temp->_value;
+            node->right = _erase(node->right, temp->_value);
+        }
+
+        return balance(node);
+    }
+
+    // Очистка
+    void _clear(AVLTreeNode<T>*& node) noexcept {
+        if (node != nullptr) {
+            _clear(node->left);
+            _clear(node->right);
             delete node;
+            node = nullptr;
         }
     }
 
-    // Копирование дерева
-    AVLNode* copy(AVLNode* node, AVLNode* parent) {
-        if (!node) return nullptr;
+    // Визуализация с ветвями
+    void _printTree(AVLTreeNode<T>* root, int space = 0, int gap = 4) const {
+        if (root == nullptr) return;
 
-        AVLNode* newNode = new AVLNode(node->_data);
-        newNode->_parent = parent;
-        newNode->_height = node->_height;
-        newNode->_left = copy(node->_left, newNode);
-        newNode->_right = copy(node->_right, newNode);
+        space += gap;
 
-        return newNode;
+        _printTree(root->right, space);
+
+        std::cout << std::endl;
+        for (int i = gap; i < space; i++) {
+            std::cout << " ";
+        }
+
+        // Определяем, есть ли левый или правый потомок
+        bool hasLeft = (root->left != nullptr);
+        bool hasRight = (root->right != nullptr);
+
+        // Выводим значение узла
+        std::cout << root->_value;
+
+        // Выводим ветви на следующей строке
+        std::cout << std::endl;
+        for (int i = gap; i < space; i++) {
+            std::cout << " ";
+        }
+
+        if (hasLeft && hasRight) {
+            std::cout << "/ \\";
+        }
+        else if (hasLeft) {
+            std::cout << "/";
+        }
+        else if (hasRight) {
+            std::cout << " \\";
+        }
+
+        _printTree(root->left, space);
     }
 
 public:
     AVLTree() : _root(nullptr) {}
+    ~AVLTree() { clear(); }
 
-    AVLTree(const AVLTree& other) {
-        _root = copy(other._root, nullptr);
+    AVLTreeNode<T>* search(T val) const noexcept {
+        return _search(_root, val);
     }
 
-    AVLTree& operator=(const AVLTree& other) {
-        if (this != &other) {
-            clear();
-            _root = copy(other._root, nullptr);
-        }
-        return *this;
+    void insert(T val) {
+        _root = _insert(_root, val);
     }
 
-    ~AVLTree() {
-        clear();
+    void erase(T val) {
+        _root = _erase(_root, val);
     }
 
-    void clear() {
-        clear(_root);
-        _root = nullptr;
+    void clear() noexcept {
+        _clear(_root);
     }
 
-    void insert(const T& data) {
-        _root = insert(_root, nullptr, data);
-    }
-
-    void remove(const T& data) {
-        _root = remove(_root, data);
-    }
-
-    bool contains(const T& data) const {
-        AVLNode* current = _root;
-        while (current) {
-            if (data < current->_data) {
-                current = current->_left;
-            }
-            else if (current->_data < data) {
-                current = current->_right;
-            }
-            else {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void printInOrder() const {
-        printInOrder(_root);
+    void printInOrder() const noexcept {
+        _printInOrder(_root);
         std::cout << std::endl;
     }
 
-    void printInOrder(AVLNode* node) const {
-        if (node) {
-            printInOrder(node->_left);
-            std::cout << node->_data << " ";
-            printInOrder(node->_right);
+    void printTree() const {
+        std::cout << "\nДерево с ветвями:\n";
+        _printTree(_root);
+        std::cout << std::endl;
+    }
+
+    void printLevelOrder() const noexcept {
+        if (_root == nullptr) return;
+
+        std::queue<AVLTreeNode<T>*> q;
+        q.push(_root);
+
+        while (!q.empty()) {
+            AVLTreeNode<T>* node = q.front();
+            q.pop();
+
+            std::cout << node->_value << "(" << balanceFactor(node) << ") ";
+
+            if (node->left != nullptr) {
+                q.push(node->left);
+            }
+            if (node->right != nullptr) {
+                q.push(node->right);
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    bool isBalanced() const {
+        return _isBalanced(_root);
+    }
+
+private:
+    void _printInOrder(AVLTreeNode<T>* node) const noexcept {
+        if (node != nullptr) {
+            _printInOrder(node->left);
+            std::cout << node->_value << " ";
+            _printInOrder(node->right);
         }
     }
 
-    // Проверка сбалансированности (для тестирования)
-    bool isBalanced() const {
-        return isBalanced(_root);
-    }
-
-    bool isBalanced(AVLNode* node) const {
-        if (!node) return true;
+    bool _isBalanced(AVLTreeNode<T>* node) const {
+        if (node == nullptr) return true;
 
         int bf = balanceFactor(node);
         if (bf < -1 || bf > 1) return false;
 
-        return isBalanced(node->_left) && isBalanced(node->_right);
+        return _isBalanced(node->left) && _isBalanced(node->right);
     }
 };
+
+#endif // TAVLTREE_H

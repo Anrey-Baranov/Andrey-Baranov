@@ -8,28 +8,30 @@
 #include "../lib_avltree/AVLTree.h"
 #include "../lib_bstree/TBinSearchTree.h" 
 int main() {
+    setlocale(LC_ALL, "Russian");
+
     AVLTree<int> tree;
 
-    // Вставка элементов
-    tree.insert(10);
-    tree.insert(20);
-    tree.insert(30);
-    tree.insert(40);
-    tree.insert(50);
-    tree.insert(25);
+    // Вставляем элементы
+    std::vector<int> values = { 50,20, 30, 70, 20, 40, 60, 80, 10, 25, 35, 45 };
+    for (int val : values) {
+        tree.insert(val);
+    }
 
-    // Вывод дерева
-    std::cout << "Inorder traversal: ";
-    tree.printInOrder();
+    // Выводим дерево с ветвями
+    tree.printTree();
 
-    // Проверка сбалансированности
-    std::cout << "Tree is balanced: " << (tree.isBalanced() ? "Yes" : "No") << std::endl;
+    // Выводим поуровневый обход с баланс-факторами
+    std::cout << "\nПоуровневый обход (значение(баланс)):\n";
+    tree.printLevelOrder();
 
-    // Удаление элемента
-    tree.remove(30);
+    // Проверяем балансировку
+    std::cout << "\nДерево сбалансировано: " << (tree.isBalanced() ? "Да" : "Нет") << std::endl;
 
-    std::cout << "After removal of 30: ";
-    tree.printInOrder();
+    // Удаляем элемент и снова выводим
+    tree.erase(50);
+    std::cout << "\nПосле удаления 50:\n";
+    tree.printTree();
 
     return 0;
 }
