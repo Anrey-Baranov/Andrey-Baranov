@@ -1,6 +1,7 @@
 #pragma once
 #include "../lib_bstree/TBinSearchTree.h"
 #include "../lib_pair/TPair.h" 
+#include <queue>
 #include <stack>
 
 template <typename KeyType, typename ValueType>
@@ -23,26 +24,29 @@ public:
     }
 
     const KeyType& first() const { return pair.first(); }
-    const ValueType& second() const { return pair.second(); }
+    ValueType second() { return pair.second(); }  // Возвращаем по значению
+    const ValueType second() const { return pair.second(); }  // Константная версия
 
     const TPair<KeyType, ValueType>& getPair() const { return pair; }
 };
-
 template <typename KeyType, typename ValueType>
 class TBSTTable {
 private:
     BSearchTree<ComparablePair<KeyType, ValueType>> _data;
+    size_t _size = 0;  // Добавляем счетчик элементов
 
 public:
-    void insert(const KeyType& key, const ValueType& value) {
+    oid insert(const KeyType& key, const ValueType& value) {
         ComparablePair<KeyType, ValueType> newPair(key, value);
         auto found = _data.search(newPair);
         if (found) {
-            // Если ключ уже существует, обновляем значение
-            const_cast<ComparablePair<KeyType, ValueType>&>(found->_value) = newPair;
+            // Для обновления значения создаем новую пару
+            _data.erase(found->_value);
+            _data.insert(newPair);
         }
         else {
             _data.insert(newPair);
+            _size++;
         }
     }
 
@@ -50,16 +54,19 @@ public:
         ComparablePair<KeyType, ValueType> searchPair(key, ValueType());
         auto found = _data.search(searchPair);
         if (found) {
-            value = found->_value.second();
+            value = found->_value.second();  // Теперь это работает
             return true;
         }
         return false;
     }
 
+
     bool erase(const KeyType& key) {
         ComparablePair<KeyType, ValueType> erasePair(key, ValueType());
-        if (_data.search(erasePair)) {
+        auto found = _data.search(erasePair);
+        if (found) {
             _data.erase(erasePair);
+            _size--;
             return true;
         }
         return false;
@@ -67,62 +74,53 @@ public:
 
     void clear() {
         _data.clear();
+        _size = 0;
     }
 
     bool empty() const {
-        return _data.min() == nullptr;
+        return _size == 0;
     }
 
     size_t size() const {
-        size_t count = 0;
-        std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> stack;
-        auto current = _data.min();
-
-        while (current || !stack.empty()) {
-            while (current) {
-                stack.push(current);
-                current = current->left;
-            }
-
-            current = stack.top();
-            stack.pop();
-            count++;
-
-            current = current->right;
-        }
-        return count;
+        return _size;
     }
 
     class iterator {
-        std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> stack;
+        std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> node_stack;
         BTreeNode<ComparablePair<KeyType, ValueType>>* current;
 
     public:
-        iterator(BTreeNode<ComparablePair<KeyType, ValueType>>* root) : current(root) {
-            if (current) {
-                // Переходим к самому левому узлу
-                while (current->left) {
-                    stack.push(current);
-                    current = current->left;
-                }
+        explicit iterator(BTreeNode<ComparablePair<KeyType, ValueType>>* root) {
+            // Инициализация - идем до крайнего левого узла
+            while (root) {
+                node_stack.push(root);
+                root = root->left;
+            }
+            if (!node_stack.empty()) {
+                current = node_stack.top();
+                node_stack.pop();
+            }
+            else {
+                current = nullptr;
             }
         }
 
-        std::pair<KeyType, ValueType> operator*() {
+        std::pair<KeyType, ValueType> operator*() const {
             return { current->_value.first(), current->_value.second() };
         }
 
         iterator& operator++() {
             if (current->right) {
-                current = current->right;
-                while (current->left) {
-                    stack.push(current);
-                    current = current->left;
+                auto node = current->right;
+                while (node) {
+                    node_stack.push(node);
+                    node = node->left;
                 }
             }
-            else if (!stack.empty()) {
-                current = stack.top();
-                stack.pop();
+
+            if (!node_stack.empty()) {
+                current = node_stack.top();
+                node_stack.pop();
             }
             else {
                 current = nullptr;
@@ -136,14 +134,10 @@ public:
     };
 
     iterator begin() {
-        auto minNode = _data.min();
-        if (minNode) {
-            while (minNode->left) {
-                minNode = minNode->left;
-            }
-        }
-        return iterator(minNode);
+        return iterator(_data.min());
     }
 
-    iterator end() { return iterator(nullptr); }
+    iterator end() {
+        return iterator(nullptr);
+    }
 };
