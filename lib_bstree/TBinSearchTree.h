@@ -20,7 +20,6 @@ class BSearchTree {
 private:
     BTreeNode<T>* _head;
 
-    // Приватные методы
     BTreeNode<T>* _search(BTreeNode<T>* node, T val) const {
         if (node == nullptr || node->_value == val) {
             return node;
@@ -112,7 +111,6 @@ public:
     BSearchTree() : _head(nullptr) {}
     ~BSearchTree() { clear(); }
 
-    // Публичные методы
     BTreeNode<T>* search(T val) const noexcept {
         return _search(_head, val);
     }

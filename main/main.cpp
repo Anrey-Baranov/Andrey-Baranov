@@ -5,15 +5,33 @@
 
 #include <iostream>
 #include <iomanip>
-#include "../lib_easy_example/easy_example.h"
+#include "../lib_avltree/AVLTree.h"
 #include "../lib_bstree/TBinSearchTree.h" 
 int main() {
-	BSearchTree<int> tree;
-	tree.insert(50);
-	tree.insert(30);
-	tree.insert(70);
-	tree.insert(40);
+    AVLTree<int> tree;
 
+    // Вставка элементов
+    tree.insert(10);
+    tree.insert(20);
+    tree.insert(30);
+    tree.insert(40);
+    tree.insert(50);
+    tree.insert(25);
+
+    // Вывод дерева
+    std::cout << "Inorder traversal: ";
+    tree.printInOrder();
+
+    // Проверка сбалансированности
+    std::cout << "Tree is balanced: " << (tree.isBalanced() ? "Yes" : "No") << std::endl;
+
+    // Удаление элемента
+    tree.remove(30);
+
+    std::cout << "After removal of 30: ";
+    tree.printInOrder();
+
+    return 0;
 }
 //std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
 //    if (k == 0) return {};
