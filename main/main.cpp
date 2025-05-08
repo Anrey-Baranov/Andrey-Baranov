@@ -13,7 +13,7 @@ int main() {
     AVLTree<int> tree;
 
     // Вставляем элементы
-    std::vector<int> values = { 50,20, 30, 70, 20, 40, 60, 80, 10, 25, 35, 45 };
+    std::vector<int> values = { 10, 20, 30, 40, 50, 60, 70, 80, 10 };
     for (int val : values) {
         tree.insert(val);
     }
@@ -28,9 +28,6 @@ int main() {
     // Проверяем балансировку
     std::cout << "\nДерево сбалансировано: " << (tree.isBalanced() ? "Да" : "Нет") << std::endl;
 
-    // Удаляем элемент и снова выводим
-    tree.erase(50);
-    std::cout << "\nПосле удаления 50:\n";
     tree.printTree();
 
     return 0;

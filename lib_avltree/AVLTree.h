@@ -1,4 +1,4 @@
-#ifndef TAVLTREE_H
+п»ї#ifndef TAVLTREE_H
 #define TAVLTREE_H
 
 #include <iostream>
@@ -6,6 +6,7 @@
 #include <queue>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 template<class T>
 class AVLTreeNode {
@@ -23,7 +24,7 @@ class AVLTree {
 private:
     AVLTreeNode<T>* _root;
 
-    // Вспомогательные функции
+    // Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ С„СѓРЅРєС†РёРё
     int height(AVLTreeNode<T>* node) const {
         return node ? node->height : 0;
     }
@@ -36,7 +37,7 @@ private:
         node->height = std::max(height(node->left), height(node->right)) + 1;
     }
 
-    // Повороты
+    // РџРѕРІРѕСЂРѕС‚С‹
     AVLTreeNode<T>* rotateRight(AVLTreeNode<T>* y) {
         AVLTreeNode<T>* x = y->left;
         y->left = x->right;
@@ -59,7 +60,7 @@ private:
         return y;
     }
 
-    // Балансировка
+    // Р‘Р°Р»Р°РЅСЃРёСЂРѕРІРєР°
     AVLTreeNode<T>* balance(AVLTreeNode<T>* node) {
         updateHeight(node);
 
@@ -81,7 +82,7 @@ private:
         return node;
     }
 
-    // Поиск
+    // РџРѕРёСЃРє
     AVLTreeNode<T>* _search(AVLTreeNode<T>* node, T val) const {
         if (node == nullptr || node->_value == val) {
             return node;
@@ -92,7 +93,7 @@ private:
         return _search(node->right, val);
     }
 
-    // Вставка
+    // Р’СЃС‚Р°РІРєР°
     AVLTreeNode<T>* _insert(AVLTreeNode<T>* node, T val) {
         if (node == nullptr) {
             return new AVLTreeNode<T>(val);
@@ -104,13 +105,13 @@ private:
             node->right = _insert(node->right, val);
         }
         else {
-            return node; // Дубликаты не допускаются
+            return node; // Р”СѓР±Р»РёРєР°С‚С‹ РЅРµ РґРѕРїСѓСЃРєР°СЋС‚СЃСЏ
         }
 
         return balance(node);
     }
 
-    // Удаление
+    // РЈРґР°Р»РµРЅРёРµ
     AVLTreeNode<T>* minValueNode(AVLTreeNode<T>* node) const {
         AVLTreeNode<T>* current = node;
         while (current && current->left != nullptr) {
@@ -148,7 +149,7 @@ private:
         return balance(node);
     }
 
-    // Очистка
+    // РћС‡РёСЃС‚РєР°
     void _clear(AVLTreeNode<T>*& node) noexcept {
         if (node != nullptr) {
             _clear(node->left);
@@ -158,43 +159,34 @@ private:
         }
     }
 
-    // Визуализация с ветвями
-    void _printTree(AVLTreeNode<T>* root, int space = 0, int gap = 4) const {
-        if (root == nullptr) return;
+    // ASCII-РІРёР·СѓР°Р»РёР·Р°С†РёСЏ РґРµСЂРµРІР°
+    void _printTree(AVLTreeNode<T>* node, const std::string& prefix = "", bool isLeft = false) const {
+        if (node == nullptr) return;
 
-        space += gap;
+        std::cout << prefix;
+        std::cout << (isLeft ? "|-- " : "\\-- ");
+        std::cout << node->_value << std::endl;
 
-        _printTree(root->right, space);
+        // Р РµРєСѓСЂСЃРёРІРЅРѕ РІС‹РІРѕРґРёРј Р»РµРІРѕРµ Рё РїСЂР°РІРѕРµ РїРѕРґРґРµСЂРµРІСЊСЏ
+        _printTree(node->left, prefix + (isLeft ? "|   " : "    "), true);
+        _printTree(node->right, prefix + (isLeft ? "|   " : "    "), false);
+    }
 
-        std::cout << std::endl;
-        for (int i = gap; i < space; i++) {
-            std::cout << " ";
+    void _printInOrder(AVLTreeNode<T>* node) const noexcept {
+        if (node != nullptr) {
+            _printInOrder(node->left);
+            std::cout << node->_value << " ";
+            _printInOrder(node->right);
         }
+    }
 
-        // Определяем, есть ли левый или правый потомок
-        bool hasLeft = (root->left != nullptr);
-        bool hasRight = (root->right != nullptr);
+    bool _isBalanced(AVLTreeNode<T>* node) const {
+        if (node == nullptr) return true;
 
-        // Выводим значение узла
-        std::cout << root->_value;
+        int bf = balanceFactor(node);
+        if (bf < -1 || bf > 1) return false;
 
-        // Выводим ветви на следующей строке
-        std::cout << std::endl;
-        for (int i = gap; i < space; i++) {
-            std::cout << " ";
-        }
-
-        if (hasLeft && hasRight) {
-            std::cout << "/ \\";
-        }
-        else if (hasLeft) {
-            std::cout << "/";
-        }
-        else if (hasRight) {
-            std::cout << " \\";
-        }
-
-        _printTree(root->left, space);
+        return _isBalanced(node->left) && _isBalanced(node->right);
     }
 
 public:
@@ -223,7 +215,7 @@ public:
     }
 
     void printTree() const {
-        std::cout << "\nДерево с ветвями:\n";
+        std::cout << "\nР”РµСЂРµРІРѕ СЃ РІРµС‚РІСЏРјРё:\n";
         _printTree(_root);
         std::cout << std::endl;
     }
@@ -252,24 +244,6 @@ public:
 
     bool isBalanced() const {
         return _isBalanced(_root);
-    }
-
-private:
-    void _printInOrder(AVLTreeNode<T>* node) const noexcept {
-        if (node != nullptr) {
-            _printInOrder(node->left);
-            std::cout << node->_value << " ";
-            _printInOrder(node->right);
-        }
-    }
-
-    bool _isBalanced(AVLTreeNode<T>* node) const {
-        if (node == nullptr) return true;
-
-        int bf = balanceFactor(node);
-        if (bf < -1 || bf > 1) return false;
-
-        return _isBalanced(node->left) && _isBalanced(node->right);
     }
 };
 
