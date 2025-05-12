@@ -7,12 +7,52 @@
 #include <iomanip>
 #include "../lib_avltree/AVLTree.h"
 #include "../lib_bstree/TBinSearchTree.h" 
+class AVLTreeExposer : public AVLTree<int> {
+public:
+    void printPrivateTree() const {
+        std::cout << "\nПриватное дерево:\n";
+        if (_root) {
+            _printTree(_root);  
+        }
+        else {
+            std::cout << "Дерево пусто\n";
+        }
+    }
+    void testPrivateMethods() {
+        std::cout << "\nTesting private methods:\n";
+
+        // Вставка через приватный метод
+        _root = _insert(_root, 25);
+        _root = _insert(_root, 15);
+        _root = _insert(_root, 35);
+
+        // Поиск через приватный метод
+        AVLTreeNode<int>* found = _search(_root, 15);
+        std::cout << "Search for 15: " << (found ? "Found" : "Not found") << "\n";
+
+        std::cout << "Balance factor of root: " << balanceFactor(_root) << "\n";
+
+        std::cout << "Before rotation - root: " << _root->_value << "\n";
+        _root = rotateRight(_root);
+        std::cout << "After right rotation - root: " << _root->_value << "\n";
+
+        _root = _erase(_root, 15);
+        found = _search(_root, 15);
+        std::cout << "Search for 15 after deletion: " << (found ? "Found" : "Not found") << "\n";
+
+        printPrivateTree();
+
+        AVLTreeNode<int>* minNode = minValueNode(_root);
+        std::cout << "Min value in tree: " << (minNode ? minNode->_value : -1) << "\n";
+    }
+};
+
 int main() {
     setlocale(LC_ALL, "Russian");
 
-    AVLTree<int> tree;
+    AVLTreeExposer tree;
 
-    // Вставляем элементы
+
     std::vector<int> values = { 10, 20, 30, 40, 50, 60, 70, 80, 10 };
     for (int val : values) {
         tree.insert(val);
@@ -28,51 +68,8 @@ int main() {
     // Проверяем балансировку
     std::cout << "\nДерево сбалансировано: " << (tree.isBalanced() ? "Да" : "Нет") << std::endl;
 
-    tree.printTree();
+    tree.testPrivateMethods();
 
     return 0;
 }
-//std::vector<int> findKLargestElements(const std::vector<int>& arr, size_t k) {
-//    if (k == 0) return {};
-//    if (k >= arr.size()) return arr;
-//
-//    try {
-//        MaxHeap<int> maxHeap(arr);
-//        std::vector<int> result;
-//        result.reserve(k);
-//
-//        for (size_t i = 0; i < k && !maxHeap.empty(); ++i) {
-//            result.push_back(maxHeap.remove_max());
-//        }
-//
-//        return result;
-//    }
-//    catch (const std::exception& e) {
-//        std::cerr << "Error in findKLargestElements: " << e.what() << std::endl;
-//        return {};
-//    }
-//}
-//
-//int main() {
-//    try {
-//        std::vector<int> numbers = { 3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 100, 150000 };
-//        size_t k = 4;
-//
-//        std::cout << "Original array: ";
-//        for (int num : numbers) std::cout << num << " ";
-//        std::cout << "\n";
-//
-//        auto kLargest = findKLargestElements(numbers, k);
-//
-//        std::cout << k << " largest elements: ";
-//        for (int num : kLargest) std::cout << num << " ";
-//        std::cout << "\n";
-//
-//        return 0;
-//    }
-//    catch (const std::exception& e) {
-//        std::cerr << "Error: " << e.what() << std::endl;
-//        return 1;
-//    }
-//}
-#endif // EASY_EXAMPLE
+#endif

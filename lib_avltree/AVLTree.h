@@ -23,6 +23,7 @@ template <class T>
 class AVLTree {
 private:
     friend class AVLTreePrivateTest;
+    friend class AVLTreeExposer;
 
     AVLTreeNode<T>* _root;
 
