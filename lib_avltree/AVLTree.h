@@ -61,23 +61,39 @@ private:
 
         return y;
     }
+    AVLTreeNode<T>* _rotateLR(AVLTreeNode<T>* node) {
+        if (node == nullptr) return node;
+        node->left = rotateLeft(node->left);  // Сначала левый поворот для left-поддерева
+        return rotateRight(node);             // Затем правый поворот для всего узла
+    }
+
+    AVLTreeNode<T>* _rotateRL(AVLTreeNode<T>* node) {
+        if (node == nullptr) return node;
+        node->right = rotateRight(node->right);  // Сначала правый поворот для right-поддерева
+        return rotateLeft(node);                 // Затем левый поворот для всего узла
+    }
 
     AVLTreeNode<T>* balance(AVLTreeNode<T>* node) {
+        if (node == nullptr) return node;
         updateHeight(node);
 
         int bf = balanceFactor(node);
 
-        if (bf == -2) {
-            if (balanceFactor(node->left) > 0) {
-                node->left = rotateLeft(node->left);
-            }
+        // Left Left (LL) → правый поворот
+        if (bf < -1 && balanceFactor(node->left) <= 0) {
             return rotateRight(node);
         }
-        else if (bf == 2) {
-            if (balanceFactor(node->right) < 0) {
-                node->right = rotateRight(node->right);
-            }
+        // Left Right (LR) → LR-поворот
+        if (bf < -1 && balanceFactor(node->left) > 0) {
+            return _rotateLR(node);
+        }
+        // Right Right (RR) → левый поворот
+        if (bf > 1 && balanceFactor(node->right) >= 0) {
             return rotateLeft(node);
+        }
+        // Right Left (RL) → RL-поворот
+        if (bf > 1 && balanceFactor(node->right) < 0) {
+            return _rotateRL(node);
         }
 
         return node;

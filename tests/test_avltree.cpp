@@ -61,6 +61,13 @@ protected:
     AVLTreeNode<int>* test_balance(AVLTreeNode<int>* node) {
         return tree.balance(node);
     }
+    AVLTreeNode<int>* test_rotateLR(AVLTreeNode<int>* node) {
+        return tree._rotateLR(node);
+    }
+
+    AVLTreeNode<int>* test_rotateRL(AVLTreeNode<int>* node) {
+        return tree._rotateRL(node);
+    }
 };
 
 TEST_F(AVLTreePrivateTest, PrivateSearch) {
@@ -144,7 +151,47 @@ TEST_F(AVLTreePrivateTest, PrivateBalance) {
     node = test_balance(node);
     EXPECT_TRUE(test_balanceFactor(node) >= -1 && test_balanceFactor(node) <= 1);
 }
+TEST_F(AVLTreePrivateTest, PrivateRotateLR) {
+    // LR-ситуация: 30 -> 10 -> 20
+    AVLTreeNode<int>* node = new AVLTreeNode<int>(30);
+    node->left = new AVLTreeNode<int>(10);
+    node->left->right = new AVLTreeNode<int>(20);
 
+    // Обновляем высоты
+    test_updateHeight(node->left->right);
+    test_updateHeight(node->left);
+    test_updateHeight(node);
+
+    // Применяем LR-поворот через метод-обёртку
+    node = test_rotateLR(node);
+
+    // Проверки
+    EXPECT_EQ(node->_value, 20);
+    EXPECT_EQ(node->left->_value, 10);
+    EXPECT_EQ(node->right->_value, 30);
+    EXPECT_TRUE(test_balanceFactor(node) >= -1 && test_balanceFactor(node) <= 1);
+}
+
+TEST_F(AVLTreePrivateTest, PrivateRotateRL) {
+    // RL-ситуация: 10 -> 30 -> 20
+    AVLTreeNode<int>* node = new AVLTreeNode<int>(10);
+    node->right = new AVLTreeNode<int>(30);
+    node->right->left = new AVLTreeNode<int>(20);
+
+    // Обновляем высоты
+    test_updateHeight(node->right->left);
+    test_updateHeight(node->right);
+    test_updateHeight(node);
+
+    // Применяем RL-поворот через метод-обёртку
+    node = test_rotateRL(node);
+
+    // Проверки
+    EXPECT_EQ(node->_value, 20);
+    EXPECT_EQ(node->left->_value, 10);
+    EXPECT_EQ(node->right->_value, 30);
+    EXPECT_TRUE(test_balanceFactor(node) >= -1 && test_balanceFactor(node) <= 1);
+}
 class AVLTreeTest : public ::testing::Test {
 protected:
     AVLTree<int> tree;
