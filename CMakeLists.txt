@@ -22,6 +22,7 @@ add_subdirectory(lib_hash_tables)
 add_subdirectory(lib_bstree)
 add_subdirectory(lib_tbst_table)
 add_subdirectory(lib_avltree)
+add_subdirectory(lib_rbtree)
 add_subdirectory(main)
 
 option(BTEST "build test?" ON)

@@ -4,6 +4,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <queue>
+#include <string>
+#include <sstream>
 
 template<class T>
 class BTreeNode {
@@ -96,20 +98,27 @@ private:
         }
     }
 
-    void _print(BTreeNode<T>* node) const noexcept {
+    void _inOrderToString(BTreeNode<T>* node, std::ostringstream& oss) const noexcept {
         if (node != nullptr) {
-            _print(node->left);
-            std::cout << node->_value << " ";
-            _print(node->right);
+            _inOrderToString(node->left, oss);
+            oss << node->_value << " ";
+            _inOrderToString(node->right, oss);
         }
     }
 
+    std::string _inOrderTraversal(BTreeNode<T>* node) const noexcept {
+        std::ostringstream oss;
+        _inOrderToString(node, oss);
+        return oss.str();
+    }
+
 public:
-    // ќбъ€вл€ем тестовый класс другом
     friend class BSearchTreePrivateTest;
 
     BSearchTree() : _head(nullptr) {}
     ~BSearchTree() { clear(); }
+
+    BTreeNode<T>* getRoot() const noexcept { return _head; }
 
     BTreeNode<T>* search(T val) const noexcept {
         return _search(_head, val);
@@ -127,9 +136,12 @@ public:
         _clear(_head);
     }
 
+    std::string inOrderTraversal() const noexcept {
+        return _inOrderTraversal(_head);
+    }
+
     void print() const noexcept {
-        _print(_head);
-        std::cout << std::endl;
+        std::cout << inOrderTraversal() << std::endl;
     }
 
     BTreeNode<T>* min() const {

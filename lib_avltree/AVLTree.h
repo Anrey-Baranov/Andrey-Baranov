@@ -61,16 +61,17 @@ private:
 
         return y;
     }
+
     AVLTreeNode<T>* _rotateLR(AVLTreeNode<T>* node) {
         if (node == nullptr) return node;
-        node->left = rotateLeft(node->left);  // Сначала левый поворот для left-поддерева
-        return rotateRight(node);             // Затем правый поворот для всего узла
+        node->left = rotateLeft(node->left);
+        return rotateRight(node);
     }
 
     AVLTreeNode<T>* _rotateRL(AVLTreeNode<T>* node) {
         if (node == nullptr) return node;
-        node->right = rotateRight(node->right);  // Сначала правый поворот для right-поддерева
-        return rotateLeft(node);                 // Затем левый поворот для всего узла
+        node->right = rotateRight(node->right);
+        return rotateLeft(node);
     }
 
     AVLTreeNode<T>* balance(AVLTreeNode<T>* node) {
@@ -79,19 +80,15 @@ private:
 
         int bf = balanceFactor(node);
 
-        // Left Left (LL) → правый поворот
         if (bf < -1 && balanceFactor(node->left) <= 0) {
             return rotateRight(node);
         }
-        // Left Right (LR) → LR-поворот
         if (bf < -1 && balanceFactor(node->left) > 0) {
             return _rotateLR(node);
         }
-        // Right Right (RR) → левый поворот
         if (bf > 1 && balanceFactor(node->right) >= 0) {
             return rotateLeft(node);
         }
-        // Right Left (RL) → RL-поворот
         if (bf > 1 && balanceFactor(node->right) < 0) {
             return _rotateRL(node);
         }
@@ -109,15 +106,47 @@ private:
         return _search(node->right, val);
     }
 
-    AVLTreeNode<T>* _insert(AVLTreeNode<T>* node, T val) {
+    // Методы для получения G, P, U
+    void getRelatives(AVLTreeNode<T>* node, T val,
+        AVLTreeNode<T>*& g, AVLTreeNode<T>*& p, AVLTreeNode<T>*& u) const {
+        g = p = u = nullptr;
+        AVLTreeNode<T>* current = node;
+        AVLTreeNode<T>* parent = nullptr;
+        AVLTreeNode<T>* grandparent = nullptr;
+
+        while (current != nullptr && current->_value != val) {
+            grandparent = parent;
+            parent = current;
+            if (val < current->_value) {
+                current = current->left;
+            }
+            else {
+                current = current->right;
+            }
+        }
+
+        if (current != nullptr && current->_value == val) {
+            p = parent;
+            g = grandparent;
+            if (g != nullptr) {
+                u = (g->left == p) ? g->right : g->left;
+            }
+        }
+    }
+
+    AVLTreeNode<T>* _insert(AVLTreeNode<T>* node, T val,
+        AVLTreeNode<T>*& g, AVLTreeNode<T>*& p, AVLTreeNode<T>*& u) {
         if (node == nullptr) {
             return new AVLTreeNode<T>(val);
         }
+
+        getRelatives(node, val, g, p, u);
+
         if (val < node->_value) {
-            node->left = _insert(node->left, val);
+            node->left = _insert(node->left, val, g, p, u);
         }
         else if (val > node->_value) {
-            node->right = _insert(node->right, val);
+            node->right = _insert(node->right, val, g, p, u);
         }
         else {
             return node; // Дубликаты не допускаются
@@ -126,7 +155,6 @@ private:
         return balance(node);
     }
 
-    // Удаление
     AVLTreeNode<T>* minValueNode(AVLTreeNode<T>* node) const {
         AVLTreeNode<T>* current = node;
         while (current && current->left != nullptr) {
@@ -180,7 +208,6 @@ private:
         std::cout << (isLeft ? "|-- " : "\\-- ");
         std::cout << node->_value << std::endl;
 
-        // Рекурсивно выводим левое и правое поддеревья
         _printTree(node->left, prefix + (isLeft ? "|   " : "    "), true);
         _printTree(node->right, prefix + (isLeft ? "|   " : "    "), false);
     }
@@ -210,8 +237,15 @@ public:
         return _search(_root, val);
     }
 
+    void getRelatives(T val, AVLTreeNode<T>*& g, AVLTreeNode<T>*& p, AVLTreeNode<T>*& u) const {
+        getRelatives(_root, val, g, p, u);
+    }
+
     void insert(T val) {
-        _root = _insert(_root, val);
+        AVLTreeNode<T>* g = nullptr;
+        AVLTreeNode<T>* p = nullptr;
+        AVLTreeNode<T>* u = nullptr;
+        _root = _insert(_root, val, g, p, u);
     }
 
     void erase(T val) {
