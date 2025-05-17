@@ -3,68 +3,62 @@
 
 #include <iostream>
 #include <iomanip>
+#include <Windows.h>
 #include "../lib_rbtree/TRBTree.h"
 
 int main() {
+    // Устанавливаем русскую локаль и кодировку для консоли
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
     setlocale(LC_ALL, "Russian");
+
     RBTree<int> tree;
 
-    // Вставка элементов
-    std::cout << "Вставляем элементы: 10, 20, 30, 15, 25, 5" << std::endl;
-    tree.insert(10);
-    tree.insert(20);
-    tree.insert(30);
-    tree.insert(15);
-    tree.insert(25);
-    tree.insert(5);
+    std::cout << "Демонстрация работы красно-черного дерева\n";
+    std::cout << "=======================================\n";
 
-    // Вывод дерева
-    std::cout << "\nКрасно-черное дерево (структура):" << std::endl;
+    // Вставка элементов
+    tree.insert(50);
+    tree.insert(30);
+    tree.insert(70);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(60);
+    tree.insert(80);
+    tree.insert(10);
+    tree.insert(25);
+    tree.insert(35);
+    tree.insert(45);
+    tree.insert(55);
+    tree.insert(65);
+    tree.insert(75);
+    tree.insert(90);
+
+    std::cout << "\nДерево после вставки элементов:\n";
     tree.print();
 
-    // Поиск элементов
-    std::cout << "\nПоиск элементов:" << std::endl;
-    int val = 15;
-    auto node = tree.search(val);
-    if (node) {
-        std::cout << "Элемент " << val << " найден в дереве." << std::endl;
-    }
-    else {
-        std::cout << "Элемент " << val << " не найден в дереве." << std::endl;
-    }
-
-    val = 100;
-    node = tree.search(val);
-    if (node) {
-        std::cout << "Элемент " << val << " найден в дереве." << std::endl;
-    }
-    else {
-        std::cout << "Элемент " << val << " не найден в дереве." << std::endl;
-    }
-
-    // Минимальный и максимальный элементы
-    // Исправлено: используем getter для значения
-    std::cout << "\nМинимальный элемент: " << tree._min()->_value << std::endl;
-    std::cout << "Максимальный элемент: " << tree._max()->_value << std::endl;
+    // Поиск элемента
+    auto found = tree.search(40);
+    std::cout << "\nПоиск 40: " << (found ? "Найден" : "Не найден") << "\n";
 
     // Удаление элементов
-    std::cout << "\nУдаляем элементы: 15, 10" << std::endl;
-    tree.erase(15);
-    tree.erase(10);
-
-    // Вывод дерева после удаления
-    std::cout << "\nКрасно-черное дерево после удаления:" << std::endl;
+    std::cout << "\nУдаление элементов 20 и 70:\n";
+    tree.erase(20);
+    tree.erase(70);
     tree.print();
 
-    // Очистка дерева
-    std::cout << "\nОчищаем дерево" << std::endl;
-    tree.clear();
+    // Поуровневый обход
+    std::cout << "\nПоуровневый обход дерева:\n";
+    tree.levelOrder();
 
-    // Попытка вывода пустого дерева
-    std::cout << "\nПопытка вывода пустого дерева:" << std::endl;
-    tree.print();
+    // Минимальное и максимальное значения (используем переименованные методы)
+    auto minNode = tree.getMin();
+    auto maxNode = tree.getMax();
+
+    std::cout << "\nМинимальное значение в дереве: " << (minNode ? minNode->_value : -1) << "\n";
+    std::cout << "Максимальное значение в дереве: " << (maxNode ? maxNode->_value : -1) << "\n";
 
     return 0;
 }
 
-#endif
+#endif // EASY_EXAMPLE

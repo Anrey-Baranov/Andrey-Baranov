@@ -22,6 +22,7 @@ public:
 
 template <class T>
 class RBTree {
+    friend int main();
 private:
     RBTreeNode<T>* _root;
     // Настройки консоли
@@ -29,18 +30,6 @@ private:
         // Устанавливаем кодировку для русских букв
         SetConsoleCP(1251);
         SetConsoleOutputCP(1251);
-
-        // Настраиваем размер буфера и окна консоли
-        HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
-        COORD size = { 100, 500 };
-        SMALL_RECT rect = { 0, 0, size.X - 1, size.Y - 1 };
-        SetConsoleScreenBufferSize(console, size);
-        SetConsoleWindowInfo(console, TRUE, &rect);
-
-        // Устанавливаем белый фон и черный текст
-        SetConsoleTextAttribute(console, BACKGROUND_INTENSITY | BACKGROUND_RED |
-            BACKGROUND_GREEN | BACKGROUND_BLUE);
-        system("cls");
     }
     // Вспомогательные функции
     void rotateLeft(RBTreeNode<T>* x) {
@@ -339,7 +328,7 @@ private:
                 std::cout << "[" << root->_value << "]" << std::endl;
             }
             else {
-                SetConsoleTextAttribute(hConsole, 15); // Белый (черный)
+                SetConsoleTextAttribute(hConsole, 1); // Синий (черный)
                 std::cout << "(" << root->_value << ")" << std::endl;
             }
             SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
@@ -348,38 +337,10 @@ private:
             printHelper(root->right, indent, true);
         }
     }
-
-public:
-    RBTree() : _root(nullptr) {
-        setupConsole();
-    }
-
-    ~RBTree() { clear(); }
-    // Метод для красивого вывода дерева
-    void print() const {
-        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (_root == nullptr) {
-            SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-            std::cout << "Дерево пусто" << std::endl;
-            return;
-        }
-
-        // Выводим заголовок
-        SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-        std::cout << "Красно-черное дерево:\n";
-        std::cout << "R - правое поддерево, L - левое поддерево\n";
-        std::cout << "Красные узлы выделены цветом\n\n";
-
-        // Выводим дерево
-        _printTree(_root, "", true, hConsole);
-        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-    }
-
-private:
     void _printTree(RBTreeNode<T>* node, const std::string& prefix, bool isLeft, HANDLE hConsole) const {
         if (node == nullptr) return;
 
-        // Выводим текущий узел
+        // Выводим текущий узелф
         std::cout << prefix;
         std::cout << (isLeft ? "L----" : "R----");
 
@@ -464,11 +425,11 @@ private:
         }
     }
 
-    RBTreeNode<T>* _min() const {
+    RBTreeNode<T>* getMin() const {
         return minValueNode(_root);
     }
 
-    RBTreeNode<T>* _max() const {
+    RBTreeNode<T>* getMax() const {
         return maxValueNode(_root);
     }
 
@@ -488,7 +449,7 @@ private:
                 std::cout << "[" << node->_value << "] ";
             }
             else {
-                SetConsoleTextAttribute(hConsole, 15); // Белый (черный)
+                SetConsoleTextAttribute(hConsole, 1); //Синий (чёрный)
                 std::cout << "(" << node->_value << ") ";
             }
             SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
@@ -502,4 +463,12 @@ private:
         }
         std::cout << std::endl;
     }
+
+public:
+    RBTree() : _root(nullptr) {
+        setupConsole();
+    }
+
+    ~RBTree() { clear(); }
+    
 };
