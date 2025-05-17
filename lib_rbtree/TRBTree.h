@@ -6,6 +6,7 @@
 #include <queue>
 #include <stdexcept>
 #include <string>
+#include <memory>
 
 enum Color { RED, BLACK, DOUBLE_BLACK };
 
@@ -95,7 +96,10 @@ public:
     }
 
     void levelOrder() const {
-        if (_root == nullptr) return;
+        if (_root == nullptr) { 
+            std::cout << "Empty tree" << std::endl;
+            return; 
+        }
 
         std::queue<RBTreeNode<T>*> q;
         q.push(_root);
@@ -156,6 +160,7 @@ private:
               / \         / \
              b   c       a   b
        */
+        if (x == nullptr || x->right == nullptr) return;
         RBTreeNode<T>* y = x->right;
         x->right = y->left;
 
@@ -188,6 +193,7 @@ private:
            / \                 / \
           a   b               b   c
         */
+        if (x == nullptr || x->left == nullptr) return;
         RBTreeNode<T>* y = x->left;
         x->left = y->right;
 
@@ -219,10 +225,10 @@ private:
         G - дед (черный)
         U - дядя
         */
-        RBTreeNode<T>* u;
+        if (k == nullptr) return;
         while (k->parent != nullptr && k->parent->color == RED) {
             if (k->parent == k->parent->parent->right) {
-                u = k->parent->parent->left; // дядя
+                RBTreeNode<T>* u = k->parent->parent->left; // дядя
                 if (u != nullptr && u->color == RED) {
                     // Случай 1: дядя красный - перекрашиваем
                     u->color = BLACK;
@@ -243,7 +249,7 @@ private:
                 }
             }
             else {
-                u = k->parent->parent->right; // дядя
+                RBTreeNode<T>* u = k->parent->parent->right; // дядя
                 if (u != nullptr && u->color == RED) {
                     // Случай 1: дядя красный
                     u->color = BLACK;
@@ -265,7 +271,9 @@ private:
             }
             if (k == _root) break;
         }
-        _root->color = BLACK;
+        if (_root != nullptr) {
+            _root->color = BLACK;
+        }
     }
 
     void fixDelete(RBTreeNode<T>* x) {
@@ -376,22 +384,22 @@ private:
     }
 
     RBTreeNode<T>* minValueNode(RBTreeNode<T>* node) const {
-        RBTreeNode<T>* current = node;
-        while (current && current->left != nullptr) {
-            current = current->left;
+        if (node == nullptr) return nullptr;
+        while (node->left != nullptr) {
+            node = node->left;
         }
-        return current;
+        return node;
     }
 
     RBTreeNode<T>* maxValueNode(RBTreeNode<T>* node) const {
-        RBTreeNode<T>* current = node;
-        while (current && current->right != nullptr) {
-            current = current->right;
+        if (node == nullptr) return nullptr;
+        while (node->right != nullptr) {
+            node = node->right;
         }
-        return current;
+        return node;
     }
 
-    RBTreeNode<T>* deleteHelper(RBTreeNode<T>* node, T val) {
+ /*   RBTreeNode<T>* deleteHelper(RBTreeNode<T>* node, T val) {
         if (node == nullptr) return node;
 
         if (val < node->_value) {
@@ -408,9 +416,10 @@ private:
             node->_value = temp->_value;
             return deleteHelper(node->right, temp->_value);
         }
-    }
+    }*/
 
     void transplant(RBTreeNode<T>* u, RBTreeNode<T>* v) {
+        if (u == nullptr) return;
         if (u->parent == nullptr) {
             _root = v;
         }
@@ -452,30 +461,8 @@ private:
             printHelper(root->right, indent, true);
         }
     }
-    void _printTree(RBTreeNode<T>* node, const std::string& prefix, bool isLeft, HANDLE hConsole) const {
-        if (node == nullptr) return;
-
-        // Выводим текущий узелф
-        std::cout << prefix;
-        std::cout << (isLeft ? "L----" : "R----");
-
-        // Устанавливаем цвет для узла
-        if (node->color == RED) {
-            SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY | FOREGROUND_RED);
-            std::cout << "[" << node->_value << "]";
-        }
-        else {
-            SetConsoleTextAttribute(hConsole, FOREGROUND_INTENSITY | FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
-            std::cout << "(" << node->_value << ")";
-        }
-        std::cout << std::endl;
-
-        // Рекурсивно выводим поддеревья
-        _printTree(node->left, prefix + (isLeft ? "|    " : "     "), true, hConsole);
-        _printTree(node->right, prefix + (isLeft ? "|    " : "     "), false, hConsole);
-    }
-
+    
     RBTreeNode<T>* getRoot() const { return _root; }
 
 };
-#endif // !TRBTREE_H
+#endif //TRBTREE_H

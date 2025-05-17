@@ -1,5 +1,7 @@
 #include "gtest.h"
 #include "../lib_rbtree/TRBTree.h"
+#include <memory>
+#include <vector>
 
 template class RBTree<int>;
 template class RBTree<std::string>;
@@ -7,6 +9,18 @@ template class RBTree<std::string>;
 class RBTreePrivateTest : public ::testing::Test {
 protected:
     RBTree<int> tree;
+    std::vector<std::unique_ptr<RBTreeNode<int>>> nodes; // Автоматическое управление памятью
+
+    RBTreeNode<int>* createNode(int val, Color color, RBTreeNode<int>* parent = nullptr) {
+        nodes.emplace_back(std::make_unique<RBTreeNode<int>>(val, color, parent));
+        return nodes.back().get();
+    }
+
+    void TearDown() override {
+        nodes.clear();
+        tree.clear();
+    }
+
 
     RBTreeNode<int>* test_search(RBTreeNode<int>* node, int val) const {
         if (node == nullptr || node->_value == val) {
@@ -96,18 +110,24 @@ protected:
 };
 
 TEST_F(RBTreePrivateTest, PrivateSearch) {
-    RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    root->left = new RBTreeNode<int>(30, RED, root);
-    root->right = new RBTreeNode<int>(70, RED, root);
-
+    auto createTestTree = []() {
+        RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
+        root->left = new RBTreeNode<int>(30, RED, root);
+        root->right = new RBTreeNode<int>(70, RED, root);
+        return root;
+        };
+    auto deleteTestTree = [](RBTreeNode<int>* root) {
+        delete root->left;
+        delete root->right;
+        delete root;
+        };
+    RBTreeNode<int>* root = createTestTree();
     ASSERT_NE(root, nullptr);
     EXPECT_NE(test_search(root, 30), nullptr);
     EXPECT_NE(test_search(root, 70), nullptr);
     EXPECT_EQ(test_search(root, 10), nullptr);
 
-    delete root->left;
-    delete root->right;
-    delete root;
+    deleteTestTree(root);
 }
 
 TEST_F(RBTreePrivateTest, PrivateInsertHelper) {
@@ -131,32 +151,41 @@ TEST_F(RBTreePrivateTest, PrivateInsertHelper) {
 
 TEST_F(RBTreePrivateTest, PrivateRotateLeft) {
     RBTreeNode<int>* root = new RBTreeNode<int>(30, BLACK);
-    root->right = new RBTreeNode<int>(50, RED, root);
-    root->right->right = new RBTreeNode<int>(70, RED, root->right);
+    RBTreeNode<int>* child = new RBTreeNode<int>(50, RED, root);
+    root->right = child;
+    child->right = new RBTreeNode<int>(70, RED, child);
 
     test_rotateLeft(root);
 
+    // После ротации root становится левым ребенком child
+    ASSERT_NE(root->parent, nullptr);
     EXPECT_EQ(root->parent->_value, 50);
     EXPECT_EQ(root->parent->left, root);
     EXPECT_EQ(root->parent->right->_value, 70);
     EXPECT_EQ(root->right, nullptr);
 
-    test_clearHelper(root->parent);
+    //// Очистка
+    //delete root->parent->right;
+    //delete root->parent;
 }
 
 TEST_F(RBTreePrivateTest, PrivateRotateRight) {
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    root->left = new RBTreeNode<int>(30, RED, root);
-    root->left->left = new RBTreeNode<int>(10, RED, root->left);
+    RBTreeNode<int>* child = new RBTreeNode<int>(30, RED, root);
+    root->left = child;
+    child->left = new RBTreeNode<int>(10, RED, child);
 
     test_rotateRight(root);
 
+    ASSERT_NE(root->parent, nullptr);
     EXPECT_EQ(root->parent->_value, 30);
     EXPECT_EQ(root->parent->right, root);
     EXPECT_EQ(root->parent->left->_value, 10);
     EXPECT_EQ(root->left, nullptr);
 
-    test_clearHelper(root->parent);
+    // Очистка
+    delete root->parent->left;
+    delete root->parent;
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixInsertCase1) {
@@ -191,14 +220,21 @@ TEST_F(RBTreePrivateTest, PrivateFixInsertCase2And3) {
 
     test_fixInsert(newNode);
 
-    EXPECT_EQ(root->_value, 30);
-    EXPECT_EQ(root->color, BLACK);
-    EXPECT_EQ(root->left->_value, 20);
-    EXPECT_EQ(root->left->color, RED);
-    EXPECT_EQ(root->right->_value, 50);
-    EXPECT_EQ(root->right->color, RED);
+    // После балансировки структура дерева изменится
+    // Проверяем новую структуру
+    RBTreeNode<int>* newRoot = newNode->parent;
+    while (newRoot->parent != nullptr) {
+        newRoot = newRoot->parent;
+    }
 
-    test_clearHelper(root);
+    EXPECT_EQ(newRoot->_value, 30);
+    EXPECT_EQ(newRoot->color, BLACK);
+    EXPECT_EQ(newRoot->left->_value, 20);
+    EXPECT_EQ(newRoot->left->color, RED);
+    EXPECT_EQ(newRoot->right->_value, 50);
+    EXPECT_EQ(newRoot->right->color, RED);
+
+    test_clearHelper(newRoot);
 }
 
 TEST_F(RBTreePrivateTest, PrivateMinMaxValueNode) {
