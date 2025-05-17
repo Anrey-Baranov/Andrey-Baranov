@@ -1,3 +1,6 @@
+#ifndef TRBTREE_H
+#define TRBTREE_H
+
 #include <iostream>
 #include <Windows.h>
 #include <queue>
@@ -23,6 +26,118 @@ public:
 template <class T>
 class RBTree {
     friend int main();
+    friend class RBTreePrivateTest;
+    friend class RBTreeTest;
+public:
+    RBTree() : _root(nullptr) {
+        setupConsole();
+    }
+
+    ~RBTree() { clear(); }
+
+    void insert(T val) {
+        RBTreeNode<T>* node = new RBTreeNode<T>(val);
+        _root = insertHelper(_root, node);
+        fixInsert(node);
+    }
+
+    void erase(T val) {
+        RBTreeNode<T>* z = search(val);
+        if (z == nullptr) return;
+
+        RBTreeNode<T>* y = z;
+        RBTreeNode<T>* x;
+        Color y_original_color = y->color;
+
+        if (z->left == nullptr) {
+            x = z->right;
+            transplant(z, z->right);
+        }
+        else if (z->right == nullptr) {
+            x = z->left;
+            transplant(z, z->left);
+        }
+        else {
+            y = minValueNode(z->right);
+            y_original_color = y->color;
+            x = y->right;
+            if (y->parent == z) {
+                if (x != nullptr) x->parent = y;
+            }
+            else {
+                transplant(y, y->right);
+                y->right = z->right;
+                y->right->parent = y;
+            }
+            transplant(z, y);
+            y->left = z->left;
+            y->left->parent = y;
+            y->color = z->color;
+        }
+
+        delete z;
+        if (y_original_color == BLACK) {
+            fixDelete(x);
+        }
+    }
+
+    void clear() {
+        clearHelper(_root);
+        _root = nullptr;
+    }
+
+    RBTreeNode<T>* getMin() const {
+        return minValueNode(_root);
+    }
+
+    RBTreeNode<T>* getMax() const {
+        return maxValueNode(_root);
+    }
+
+    void levelOrder() const {
+        if (_root == nullptr) return;
+
+        std::queue<RBTreeNode<T>*> q;
+        q.push(_root);
+
+        while (!q.empty()) {
+            RBTreeNode<T>* node = q.front();
+            q.pop();
+
+            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (node->color == RED) {
+                SetConsoleTextAttribute(hConsole, 12); // Красный
+                std::cout << "[" << node->_value << "] ";
+            }
+            else {
+                SetConsoleTextAttribute(hConsole, 1); //Синий (чёрный)
+                std::cout << "(" << node->_value << ") ";
+            }
+            SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
+
+            if (node->left != nullptr) {
+                q.push(node->left);
+            }
+            if (node->right != nullptr) {
+                q.push(node->right);
+            }
+        }
+        std::cout << std::endl;
+    }
+
+    RBTreeNode<T>* search(T val) const {
+        return searchHelper(_root, val);
+    }
+
+    void print() const {
+        if (_root == nullptr) {
+            std::cout << "Empty tree" << std::endl;
+        }
+        else {
+            printHelper(_root, "", true);
+        }
+    }
+
 private:
     RBTreeNode<T>* _root;
     // Настройки консоли
@@ -359,116 +474,8 @@ private:
         _printTree(node->left, prefix + (isLeft ? "|    " : "     "), true, hConsole);
         _printTree(node->right, prefix + (isLeft ? "|    " : "     "), false, hConsole);
     }
+
     RBTreeNode<T>* getRoot() const { return _root; }
 
-    RBTreeNode<T>* search(T val) const {
-        return searchHelper(_root, val);
-    }
-
-    void insert(T val) {
-        RBTreeNode<T>* node = new RBTreeNode<T>(val);
-        _root = insertHelper(_root, node);
-        fixInsert(node);
-    }
-
-    void erase(T val) {
-        RBTreeNode<T>* z = search(val);
-        if (z == nullptr) return;
-
-        RBTreeNode<T>* y = z;
-        RBTreeNode<T>* x;
-        Color y_original_color = y->color;
-
-        if (z->left == nullptr) {
-            x = z->right;
-            transplant(z, z->right);
-        }
-        else if (z->right == nullptr) {
-            x = z->left;
-            transplant(z, z->left);
-        }
-        else {
-            y = minValueNode(z->right);
-            y_original_color = y->color;
-            x = y->right;
-            if (y->parent == z) {
-                if (x != nullptr) x->parent = y;
-            }
-            else {
-                transplant(y, y->right);
-                y->right = z->right;
-                y->right->parent = y;
-            }
-            transplant(z, y);
-            y->left = z->left;
-            y->left->parent = y;
-            y->color = z->color;
-        }
-
-        delete z;
-        if (y_original_color == BLACK) {
-            fixDelete(x);
-        }
-    }
-
-    void clear() {
-        clearHelper(_root);
-        _root = nullptr;
-    }
-
-    void print() const {
-        if (_root == nullptr) {
-            std::cout << "Empty tree" << std::endl;
-        }
-        else {
-            printHelper(_root, "", true);
-        }
-    }
-
-    RBTreeNode<T>* getMin() const {
-        return minValueNode(_root);
-    }
-
-    RBTreeNode<T>* getMax() const {
-        return maxValueNode(_root);
-    }
-
-    void levelOrder() const {
-        if (_root == nullptr) return;
-
-        std::queue<RBTreeNode<T>*> q;
-        q.push(_root);
-
-        while (!q.empty()) {
-            RBTreeNode<T>* node = q.front();
-            q.pop();
-
-            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (node->color == RED) {
-                SetConsoleTextAttribute(hConsole, 12); // Красный
-                std::cout << "[" << node->_value << "] ";
-            }
-            else {
-                SetConsoleTextAttribute(hConsole, 1); //Синий (чёрный)
-                std::cout << "(" << node->_value << ") ";
-            }
-            SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
-
-            if (node->left != nullptr) {
-                q.push(node->left);
-            }
-            if (node->right != nullptr) {
-                q.push(node->right);
-            }
-        }
-        std::cout << std::endl;
-    }
-
-public:
-    RBTree() : _root(nullptr) {
-        setupConsole();
-    }
-
-    ~RBTree() { clear(); }
-    
 };
+#endif // !TRBTREE_H
