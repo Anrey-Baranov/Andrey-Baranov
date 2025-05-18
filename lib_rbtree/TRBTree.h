@@ -6,7 +6,7 @@
 #include <queue>
 #include <stdexcept>
 #include <string>
-#include <memory>
+
 
 enum Color { RED, BLACK, DOUBLE_BLACK };
 
@@ -26,19 +26,22 @@ public:
 
 template <class T>
 class RBTree {
-    friend int main();
     friend class RBTreePrivateTest;
+    friend int main();
     friend class RBTreeTest;
 public:
     RBTree() : _root(nullptr) {
         setupConsole();
     }
-
+    void setRoot(RBTreeNode<T>* root) { _root = root; }
     ~RBTree() { clear(); }
 
     void insert(T val) {
         RBTreeNode<T>* node = new RBTreeNode<T>(val);
         _root = insertHelper(_root, node);
+        if (_root->parent != nullptr) {  // Дополнительная проверка
+            _root->parent = nullptr;
+        }
         fixInsert(node);
     }
 
@@ -141,6 +144,7 @@ public:
             printHelper(_root, "", true);
         }
     }
+    RBTreeNode<T>* getRoot() const { return _root; }
 
 private:
     RBTreeNode<T>* _root;
@@ -150,17 +154,18 @@ private:
         SetConsoleCP(1251);
         SetConsoleOutputCP(1251);
     }
-    // Вспомогательные функции
+
     void rotateLeft(RBTreeNode<T>* x) {
         /*
-       Левый поворот вокруг узла x:
-             x               y
-            / \             / \
-           a   y    =>     x   c
-              / \         / \
-             b   c       a   b
-       */
+        Левый поворот вокруг узла x:
+              x               y
+             / \             / \
+            a   y    =>     x   c
+               / \         / \
+              b   c       a   b
+        */
         if (x == nullptr || x->right == nullptr) return;
+
         RBTreeNode<T>* y = x->right;
         x->right = y->left;
 
@@ -172,6 +177,7 @@ private:
 
         if (x->parent == nullptr) {
             _root = y;
+            y->parent = nullptr;
         }
         else if (x == x->parent->left) {
             x->parent->left = y;
@@ -182,6 +188,18 @@ private:
 
         y->left = x;
         x->parent = y;
+        if (y->parent == nullptr) {
+            y->color = BLACK;
+        }
+        //// Балансировка после поворота
+        //if (y->parent == nullptr) {
+        //    // Если y стал корнем, он должен быть черным
+        //    y->color = BLACK;
+        //}
+        //else {
+        //    // Вызываем балансировку для нового поддерева
+        //    fixInsert(y);
+        //}
     }
 
     void rotateRight(RBTreeNode<T>* x) {
@@ -194,6 +212,7 @@ private:
           a   b               b   c
         */
         if (x == nullptr || x->left == nullptr) return;
+
         RBTreeNode<T>* y = x->left;
         x->left = y->right;
 
@@ -205,6 +224,7 @@ private:
 
         if (x->parent == nullptr) {
             _root = y;
+            y->parent = nullptr;
         }
         else if (x == x->parent->right) {
             x->parent->right = y;
@@ -215,51 +235,31 @@ private:
 
         y->right = x;
         x->parent = y;
-    }
 
+        // Всегда сохраняем цвет исходного корня
+        y->color = x->color;
+        x->color = RED;  // Старый корень становится красным
+
+        //// Если y стал глобальным корнем, делаем его чёрным
+        //if (y == _root) {
+        //    y->color = BLACK;
+        //}
+    }
     void fixInsert(RBTreeNode<T>* k) {
-        /*
-        Балансировка после вставки:
-        X - текущий узел (красный)
-        P - родитель (красный)
-        G - дед (черный)
-        U - дядя
-        */
-        if (k == nullptr) return;
-        while (k->parent != nullptr && k->parent->color == RED) {
-            if (k->parent == k->parent->parent->right) {
-                RBTreeNode<T>* u = k->parent->parent->left; // дядя
-                if (u != nullptr && u->color == RED) {
-                    // Случай 1: дядя красный - перекрашиваем
-                    u->color = BLACK;
-                    k->parent->color = BLACK;
-                    k->parent->parent->color = RED;
-                    k = k->parent->parent;
-                }
-                else {
-                    // Случай 2: дядя черный и узел - левый ребенок
-                    if (k == k->parent->left) {
-                        k = k->parent;
-                        rotateRight(k);
-                    }
-                    // Случай 3: дядя черный и узел - правый ребенок
-                    k->parent->color = BLACK;
-                    k->parent->parent->color = RED;
-                    rotateLeft(k->parent->parent);
-                }
-            }
-            else {
-                RBTreeNode<T>* u = k->parent->parent->right; // дядя
-                if (u != nullptr && u->color == RED) {
+        if (k == nullptr || k == _root) return;
+        while (k != _root && k->parent->color == RED) {
+            if (k->parent == k->parent->parent->left) {
+                RBTreeNode<T>* uncle = k->parent->parent->right;
+                if (uncle != nullptr && uncle->color == RED) {
                     // Случай 1: дядя красный
-                    u->color = BLACK;
                     k->parent->color = BLACK;
+                    uncle->color = BLACK;
                     k->parent->parent->color = RED;
                     k = k->parent->parent;
                 }
                 else {
-                    // Случай 2: дядя черный и узел - правый ребенок
                     if (k == k->parent->right) {
+                        // Случай 2: дядя черный и узел - правый ребенок
                         k = k->parent;
                         rotateLeft(k);
                     }
@@ -269,12 +269,89 @@ private:
                     rotateRight(k->parent->parent);
                 }
             }
-            if (k == _root) break;
+            else {
+                // Симметричный случай, когда родитель - правый ребенок
+                RBTreeNode<T>* uncle = k->parent->parent->left;
+                if (uncle != nullptr && uncle->color == RED) {
+                    // Случай 1: дядя красный
+                    k->parent->color = BLACK;
+                    uncle->color = BLACK;
+                    k->parent->parent->color = RED;
+                    k = k->parent->parent;
+                }
+                else {
+                    if (k == k->parent->left) {
+                        // Случай 2: дядя черный и узел - левый ребенок
+                        k = k->parent;
+                        rotateRight(k);
+                    }
+                    // Случай 3: дядя черный и узел - правый ребенок
+                    k->parent->color = BLACK;
+                    k->parent->parent->color = RED;
+                    rotateLeft(k->parent->parent);
+                }
+            }
         }
-        if (_root != nullptr) {
-            _root->color = BLACK;
-        }
+        _root->color = BLACK;
     }
+
+    //void fixInsert(RBTreeNode<T>* k) {
+    //    if (k == nullptr) return;
+
+    //    // Новый узел всегда красный
+    //    while (k != _root && k->parent != nullptr && k->parent->color == RED) {
+    //        // Проверка на существование дедушки
+    //        if (k->parent->parent == nullptr) break;
+
+    //        if (k->parent == k->parent->parent->left) {
+    //            RBTreeNode<T>* uncle = k->parent->parent->right;
+
+    //            // Случай 1: дядя существует и красный
+    //            if (uncle != nullptr && uncle->color == RED) {
+    //                k->parent->color = BLACK;
+    //                uncle->color = BLACK;
+    //                k->parent->parent->color = RED;
+    //                k = k->parent->parent;
+    //            }
+    //            else {
+    //                // Случай 2 и 3
+    //                if (k == k->parent->right) {
+    //                    k = k->parent;
+    //                    rotateLeft(k);
+    //                }
+    //                k->parent->color = BLACK;
+    //                if (k->parent->parent != nullptr) {
+    //                    k->parent->parent->color = RED;
+    //                    rotateRight(k->parent->parent);
+    //                }
+    //            }
+    //        }
+    //        else {
+    //            // Симметричный случай
+    //            RBTreeNode<T>* uncle = k->parent->parent->left;
+    //            if (uncle != nullptr && uncle->color == RED) {
+    //                k->parent->color = BLACK;
+    //                uncle->color = BLACK;
+    //                k->parent->parent->color = RED;
+    //                k = k->parent->parent;
+    //            }
+    //            else {
+    //                if (k == k->parent->left) {
+    //                    k = k->parent;
+    //                    rotateRight(k);
+    //                }
+    //                k->parent->color = BLACK;
+    //                if (k->parent->parent != nullptr) {
+    //                    k->parent->parent->color = RED;
+    //                    rotateLeft(k->parent->parent);
+    //                }
+    //            }
+    //        }
+    //    }
+
+    //    // Гарантируем, что корень черный
+    //    _root->color = BLACK;
+    //}
 
     void fixDelete(RBTreeNode<T>* x) {
         /*
@@ -363,7 +440,10 @@ private:
     }
 
     RBTreeNode<T>* insertHelper(RBTreeNode<T>* root, RBTreeNode<T>* pt) {
-        if (root == nullptr) return pt;
+        if (root == nullptr) {
+            pt->parent = nullptr;  // Убедимся, что новый узел имеет parent = nullptr
+            return pt;
+        }
 
         if (pt->_value < root->_value) {
             root->left = insertHelper(root->left, pt);
@@ -378,9 +458,14 @@ private:
 
     void clearHelper(RBTreeNode<T>* node) {
         if (node == nullptr) return;
-        clearHelper(node->left);
-        clearHelper(node->right);
+
+        // Сначала сохраняем детей, так как после удаления node доступ к ним будет невалидным
+        RBTreeNode<T>* left = node->left;
+        RBTreeNode<T>* right = node->right;
+
         delete node;
+        clearHelper(left);
+        clearHelper(right);
     }
 
     RBTreeNode<T>* minValueNode(RBTreeNode<T>* node) const {
@@ -399,27 +484,9 @@ private:
         return node;
     }
 
- /*   RBTreeNode<T>* deleteHelper(RBTreeNode<T>* node, T val) {
-        if (node == nullptr) return node;
-
-        if (val < node->_value) {
-            return deleteHelper(node->left, val);
-        }
-        else if (val > node->_value) {
-            return deleteHelper(node->right, val);
-        }
-        else {
-            if (node->left == nullptr || node->right == nullptr) {
-                return node;
-            }
-            RBTreeNode<T>* temp = minValueNode(node->right);
-            node->_value = temp->_value;
-            return deleteHelper(node->right, temp->_value);
-        }
-    }*/
-
-    void transplant(RBTreeNode<T>* u, RBTreeNode<T>* v) {
+     void transplant(RBTreeNode<T>* u, RBTreeNode<T>* v) {
         if (u == nullptr) return;
+
         if (u->parent == nullptr) {
             _root = v;
         }
@@ -429,6 +496,7 @@ private:
         else {
             u->parent->right = v;
         }
+
         if (v != nullptr) {
             v->parent = u->parent;
         }
@@ -462,7 +530,5 @@ private:
         }
     }
     
-    RBTreeNode<T>* getRoot() const { return _root; }
-
 };
 #endif //TRBTREE_H

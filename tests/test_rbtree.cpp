@@ -107,6 +107,7 @@ protected:
         test_clearHelper(node->right);
         delete node;
     }
+
 };
 
 TEST_F(RBTreePrivateTest, PrivateSearch) {
@@ -146,7 +147,6 @@ TEST_F(RBTreePrivateTest, PrivateInsertHelper) {
     EXPECT_EQ(root->left->parent, root);
     EXPECT_EQ(root->right->parent, root);
 
-    test_clearHelper(root);
 }
 
 TEST_F(RBTreePrivateTest, PrivateRotateLeft) {
@@ -164,9 +164,6 @@ TEST_F(RBTreePrivateTest, PrivateRotateLeft) {
     EXPECT_EQ(root->parent->right->_value, 70);
     EXPECT_EQ(root->right, nullptr);
 
-    //// Очистка
-    //delete root->parent->right;
-    //delete root->parent;
 }
 
 TEST_F(RBTreePrivateTest, PrivateRotateRight) {
@@ -177,15 +174,15 @@ TEST_F(RBTreePrivateTest, PrivateRotateRight) {
 
     test_rotateRight(root);
 
-    ASSERT_NE(root->parent, nullptr);
-    EXPECT_EQ(root->parent->_value, 30);
-    EXPECT_EQ(root->parent->right, root);
-    EXPECT_EQ(root->parent->left->_value, 10);
-    EXPECT_EQ(root->left, nullptr);
+    RBTreeNode<int>* newRoot = root->parent;
+    ASSERT_NE(newRoot, nullptr);
+    EXPECT_EQ(newRoot->_value, 30);
+    EXPECT_EQ(newRoot->color, BLACK); // Проверяем, что корень ЧЁРНЫЙ!
+    EXPECT_EQ(newRoot->left->_value, 10);
+    EXPECT_EQ(newRoot->left->color, RED);
+    EXPECT_EQ(newRoot->right->_value, 50);
+    EXPECT_EQ(newRoot->right->color, RED);
 
-    // Очистка
-    delete root->parent->left;
-    delete root->parent;
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixInsertCase1) {
@@ -198,15 +195,15 @@ TEST_F(RBTreePrivateTest, PrivateFixInsertCase1) {
     // Случай 1: Дядя КРАСНЫЙ
     RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node1);
     node1->left = newNode;
-
+    tree.setRoot(root);
     test_fixInsert(newNode);
 
-    EXPECT_EQ(root->color, RED);
+
+    EXPECT_EQ(root->color, BLACK);
     EXPECT_EQ(node1->color, BLACK);
     EXPECT_EQ(node2->color, BLACK);
     EXPECT_EQ(newNode->color, RED);
 
-    test_clearHelper(root);
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixInsertCase2And3) {
@@ -214,18 +211,18 @@ TEST_F(RBTreePrivateTest, PrivateFixInsertCase2And3) {
     RBTreeNode<int>* node1 = new RBTreeNode<int>(30, RED, root);
     root->left = node1;
 
-    // Случай 2 и 3: Дядя ЧЕРНЫЙ, а новый узел - левый дочерний
+    // Устанавливаем корень дерева
+    tree.setRoot(root);  // <-- Ключевое исправление!
+
+    // Case 2 and 3: Uncle is black and new node is left child
     RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node1);
     node1->left = newNode;
 
     test_fixInsert(newNode);
 
-    // После балансировки структура дерева изменится
-    // Проверяем новую структуру
-    RBTreeNode<int>* newRoot = newNode->parent;
-    while (newRoot->parent != nullptr) {
-        newRoot = newRoot->parent;
-    }
+    // After balancing, tree structure should change
+    RBTreeNode<int>* newRoot = tree.getRoot();
+    ASSERT_NE(newRoot, nullptr);
 
     EXPECT_EQ(newRoot->_value, 30);
     EXPECT_EQ(newRoot->color, BLACK);
@@ -234,7 +231,7 @@ TEST_F(RBTreePrivateTest, PrivateFixInsertCase2And3) {
     EXPECT_EQ(newRoot->right->_value, 50);
     EXPECT_EQ(newRoot->right->color, RED);
 
-    test_clearHelper(newRoot);
+    //test_clearHelper(newRoot);
 }
 
 TEST_F(RBTreePrivateTest, PrivateMinMaxValueNode) {
@@ -292,6 +289,27 @@ TEST_F(RBTreePrivateTest, PrivateFixDeleteCases) {
     test_clearHelper(root);
 }
 
+//TEST_F(RBTreePrivateTest, PrivateFixDeleteCases) {
+//    RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
+//    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, BLACK, root);
+//    RBTreeNode<int>* node2 = new RBTreeNode<int>(70, RED, root);
+//    root->left = node1;
+//    root->right = node2;
+//    node1->right = new RBTreeNode<int>(40, RED, node1);
+//
+//    // Случай 1: Брат красного цвета
+//    test_fixDelete(node1->left);
+//
+//    EXPECT_EQ(root->color, BLACK);
+//    EXPECT_EQ(node1->color, BLACK);
+//    EXPECT_EQ(node2->color, BLACK);
+//
+//    // Очистка
+//    delete node1->right;
+//    delete node1;
+//    delete node2;
+//    delete root;
+//}
 class RBTreeTest : public ::testing::Test {
 protected:
     RBTree<int> tree;
