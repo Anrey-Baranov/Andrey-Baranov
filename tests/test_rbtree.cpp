@@ -691,49 +691,6 @@ TEST_F(RBTreeTest, AllRotationCases) {
     EXPECT_EQ(root->right->color, RED);
 }
 
-//TEST_F(RBTreeTest, ComplexOperations) {
-//    RBTree<int> bigTree;
-//
-//    // Вставка 100 элементов
-//    for (int i = 0; i < 100; ++i) {
-//        bigTree.insert(i);
-//        // Проверяем свойства после каждой вставки
-//        ASSERT_NE(bigTree.search(i), nullptr);
-//        EXPECT_TRUE(checkRedBlackProperties(bigTree.getRoot()));
-//    }
-//
-//    // Проверяем, что все значения присутствуют
-//    for (int i = 0; i < 100; ++i) {
-//        EXPECT_NE(bigTree.search(i), nullptr);
-//    }
-//
-//    // Проверка, что корень чёрный
-//    EXPECT_EQ(bigTree.getRoot()->color, BLACK);
-//
-//    // Удаляем каждый второй элемент
-//    for (int i = 0; i < 100; i += 2) {
-//        bigTree.erase(i);
-//        // Проверяем свойства после каждого удаления
-//        EXPECT_TRUE(checkRedBlackProperties(bigTree.getRoot()));
-//    }
-//
-//    // Проверяем, что остались только нечётные числа
-//    for (int i = 0; i < 100; ++i) {
-//        if (i % 2 == 0) {
-//            EXPECT_EQ(bigTree.search(i), nullptr);
-//        }
-//        else {
-//            EXPECT_NE(bigTree.search(i), nullptr);
-//        }
-//    }
-//
-//    // Очищаем дерево
-//    bigTree.clear();
-//    EXPECT_EQ(bigTree.getRoot(), nullptr);
-//
-//    // Проверяем поиск в пустом дереве
-//    EXPECT_EQ(bigTree.search(1), nullptr);
-//}
 
 TEST_F(RBTreeTest, StringValues) {
     RBTree<std::string> stringTree;
