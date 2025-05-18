@@ -27,15 +27,16 @@ public:
 template <class T>
 class RBTree {
     friend class RBTreePrivateTest;
-    friend int main();
     friend class RBTreeTest;
+    friend int main();
+
 public:
     RBTree() : _root(nullptr) {
         setupConsole();
     }
     void setRoot(RBTreeNode<T>* root) { _root = root; }
     ~RBTree() { clear(); }
-
+    
     void insert(T val) {
         if (search(val) != nullptr) {
             return;  // Дубликат - игнорируем
@@ -58,26 +59,31 @@ public:
 
         if (z->left == nullptr) {
             x = z->right;
-            transplant(z, z->right);
+            transplant2(z, z->right);
         }
         else if (z->right == nullptr) {
             x = z->left;
-            transplant(z, z->left);
+            transplant2(z, z->left);
         }
         else {
             y = minValueNode(z->right);
             y_original_color = y->color;
             x = y->right;
 
-            if (y->parent != z) {
-                transplant(y, y->right);
+            if (y != z->right) {
+                transplant2(y, y->right);
                 y->right = z->right;
                 if (y->right != nullptr) {
                     y->right->parent = y;
                 }
             }
+            else {
+                if (x != nullptr) {
+                    x->parent = y;
+                }
+            }
 
-            transplant(z, y);
+            transplant2(z, y);
             y->left = z->left;
             if (y->left != nullptr) {
                 y->left->parent = y;
@@ -86,8 +92,40 @@ public:
         }
 
         delete z;
+
         if (y_original_color == BLACK) {
-            fixDelete(x);
+            if (x != nullptr) {
+                // Добавляем проверку на существование родителя
+                if (x->parent != nullptr) {
+                    fixDelete(x);
+                }
+            }
+            else {
+                // Создаем фиктивный узел для случаев, когда x - nullptr
+                RBTreeNode<T>* phantom = new RBTreeNode<T>(0, BLACK);
+                // Устанавливаем родителя фиктивного узла
+                if (y != nullptr) {
+                    phantom->parent = y->parent;
+                    // Если y стал корнем, обновляем parent фиктивного узла
+                    if (y == _root) {
+                        phantom->parent = nullptr;
+                    }
+                }
+                else {
+                    phantom->parent = z->parent;
+                }
+
+                // Если дерево не пустое, выполняем фиксацию
+                if (_root != nullptr) {
+                    fixDelete(phantom);
+                }
+                delete phantom;
+            }
+        }
+
+        // Гарантируем, что корень всегда черный
+        if (_root != nullptr) {
+            _root->color = BLACK;
         }
     }
 
@@ -160,16 +198,45 @@ private:
         SetConsoleCP(1251);
         SetConsoleOutputCP(1251);
     }
+    
+    //void rotateLeft(RBTreeNode<T>* x) {
+    //    /*
+    //    Левый поворот вокруг узла x:
+    //          x               y
+    //         / \             / \
+    //        a   y    =>     x   c
+    //           / \         / \
+    //          b   c       a   b
+    //    */
+    //    if (x == nullptr || x->right == nullptr) return;
 
+    //    RBTreeNode<T>* y = x->right;
+    //    x->right = y->left;
+
+    //    if (y->left != nullptr) {
+    //        y->left->parent = x;
+    //    }
+
+    //    y->parent = x->parent;
+
+    //    if (x->parent == nullptr) {
+    //        _root = y;
+    //        y->parent = nullptr;
+    //    }
+    //    else if (x == x->parent->left) {
+    //        x->parent->left = y;
+    //    }
+    //    else {
+    //        x->parent->right = y;
+    //    }
+
+    //    y->left = x;
+    //    x->parent = y;
+    //    if (y->parent == nullptr) {
+    //        y->color = BLACK;
+    //    }
+    //}
     void rotateLeft(RBTreeNode<T>* x) {
-        /*
-        Левый поворот вокруг узла x:
-              x               y
-             / \             / \
-            a   y    =>     x   c
-               / \         / \
-              b   c       a   b
-        */
         if (x == nullptr || x->right == nullptr) return;
 
         RBTreeNode<T>* y = x->right;
@@ -183,7 +250,6 @@ private:
 
         if (x->parent == nullptr) {
             _root = y;
-            y->parent = nullptr;
         }
         else if (x == x->parent->left) {
             x->parent->left = y;
@@ -194,18 +260,10 @@ private:
 
         y->left = x;
         x->parent = y;
-        if (y->parent == nullptr) {
-            y->color = BLACK;
-        }
-        //// Балансировка после поворота
-        //if (y->parent == nullptr) {
-        //    // Если y стал корнем, он должен быть черным
-        //    y->color = BLACK;
-        //}
-        //else {
-        //    // Вызываем балансировку для нового поддерева
-        //    fixInsert(y);
-        //}
+
+        // Сохраняем цвет исходного узла x и устанавливаем его в красный
+        y->color = x->color;
+        x->color = RED;
     }
 
     void rotateRight(RBTreeNode<T>* x) {
@@ -246,58 +304,7 @@ private:
         y->color = x->color;
         x->color = RED;  // Старый корень становится красным
     }
-    //void fixInsert(RBTreeNode<T>* k) {
 
-    //    if (k == nullptr || k == _root) return;
-
-    //    while (k != _root && k->parent->color == RED) {
-    //        if (k->parent->parent == nullptr) break;
-    //        if (k->parent == k->parent->parent->left) {
-    //            RBTreeNode<T>* uncle = k->parent->parent->right;
-    //            if (uncle != nullptr && uncle->color == RED) {
-    //                // Случай 1: дядя красный
-    //                k->parent->color = BLACK;
-    //                uncle->color = BLACK;
-    //                k->parent->parent->color = RED;
-    //                k = k->parent->parent;
-    //            }
-    //            else {
-    //                if (k == k->parent->right) {
-    //                    // Случай 2: дядя черный и узел - правый ребенок
-    //                    k = k->parent;
-    //                    rotateLeft(k);
-    //                }
-    //                // Случай 3: дядя черный и узел - левый ребенок
-    //                k->parent->color = BLACK;
-    //                k->parent->parent->color = RED;
-    //                rotateRight(k->parent->parent);
-    //            }
-    //        }
-    //        else {
-    //            // Симметричный случай, когда родитель - правый ребенок
-    //            RBTreeNode<T>* uncle = k->parent->parent->left;
-    //            if (uncle != nullptr && uncle->color == RED) {
-    //                // Случай 1: дядя красный
-    //                k->parent->color = BLACK;
-    //                uncle->color = BLACK;
-    //                k->parent->parent->color = RED;
-    //                k = k->parent->parent;
-    //            }
-    //            else {
-    //                if (k == k->parent->left) {
-    //                    // Случай 2: дядя черный и узел - левый ребенок
-    //                    k = k->parent;
-    //                    rotateRight(k);
-    //                }
-    //                // Случай 3: дядя черный и узел - правый ребенок
-    //                k->parent->color = BLACK;
-    //                k->parent->parent->color = RED;
-    //                rotateLeft(k->parent->parent);
-    //            }
-    //        }
-    //    }
-    //    _root->color = BLACK;
-    //}
 
     void fixInsert(RBTreeNode<T>* k) {
         if (k == nullptr) return;
@@ -379,30 +386,27 @@ private:
         _root->color = BLACK;
     }
 
-
     //void fixDelete(RBTreeNode<T>* x) {
-    //    /*
-    //    Балансировка после удаления:
-    //    X - текущий узел (двойной черный)
-    //    P - родитель
-    //    S - брат
-    //    */
     //    if (x == nullptr) return;
 
-    //    while (x != _root && x->color == BLACK) {
+    //    while (x != _root && (x == nullptr || x->color == BLACK)) {
     //        if (x == x->parent->left) {
     //            RBTreeNode<T>* s = x->parent->right;
+
     //            // Случай 1: брат красный
-    //            if (s->color == RED) {
+    //            if (s != nullptr && s->color == RED) {
     //                s->color = BLACK;
     //                x->parent->color = RED;
     //                rotateLeft(x->parent);
     //                s = x->parent->right;
     //            }
+
     //            // Случай 2: оба ребенка брата черные
-    //            if ((s->left == nullptr || s->left->color == BLACK) &&
-    //                (s->right == nullptr || s->right->color == BLACK)) {
-    //                s->color = RED;
+    //            if ((s == nullptr) ||
+    //                ((s->left == nullptr || s->left->color == BLACK) &&
+    //                    (s->right == nullptr || s->right->color == BLACK))) {
+    //                if (s != nullptr) s->color = RED;
+    //                x->parent->color = BLACK;
     //                x = x->parent;
     //            }
     //            else {
@@ -413,87 +417,97 @@ private:
     //                    rotateRight(s);
     //                    s = x->parent->right;
     //                }
+
     //                // Случай 4: левый ребенок брата черный
-    //                s->color = x->parent->color;
-    //                x->parent->color = BLACK;
-    //                if (s->right != nullptr) s->right->color = BLACK;
-    //                rotateLeft(x->parent);
+    //                if (s != nullptr) {
+    //                    s->color = x->parent->color;
+    //                    x->parent->color = BLACK;
+    //                    if (s->right != nullptr) s->right->color = BLACK;
+    //                    rotateLeft(x->parent);
+    //                }
     //                x = _root;
     //            }
     //        }
     //        else {
+    //            // Симметричный случай для правого ребенка
     //            RBTreeNode<T>* s = x->parent->left;
-    //            // Случай 1: брат красный
-    //            if (s->color == RED) {
+
+    //            if (s != nullptr && s->color == RED) {
     //                s->color = BLACK;
     //                x->parent->color = RED;
     //                rotateRight(x->parent);
     //                s = x->parent->left;
     //            }
-    //            // Случай 2: оба ребенка брата черные
-    //            if ((s->right == nullptr || s->right->color == BLACK) &&
-    //                (s->left == nullptr || s->left->color == BLACK)) {
-    //                s->color = RED;
+
+    //            if ((s == nullptr) ||
+    //                ((s->right == nullptr || s->right->color == BLACK) &&
+    //                    (s->left == nullptr || s->left->color == BLACK))) {
+    //                if (s != nullptr) s->color = RED;
     //                x = x->parent;
     //            }
     //            else {
-    //                // Случай 3: левый ребенок брата черный
     //                if (s->left == nullptr || s->left->color == BLACK) {
     //                    if (s->right != nullptr) s->right->color = BLACK;
     //                    s->color = RED;
     //                    rotateLeft(s);
     //                    s = x->parent->left;
     //                }
-    //                // Случай 4: правый ребенок брата черный
-    //                s->color = x->parent->color;
-    //                x->parent->color = BLACK;
-    //                if (s->left != nullptr) s->left->color = BLACK;
-    //                rotateRight(x->parent);
+
+    //                if (s != nullptr) {
+    //                    s->color = x->parent->color;
+    //                    x->parent->color = BLACK;
+    //                    if (s->left != nullptr) s->left->color = BLACK;
+    //                    rotateRight(x->parent);
+    //                }
     //                x = _root;
     //            }
     //        }
     //    }
-    //    x->color = BLACK;
+    //    if (x != nullptr) x->color = BLACK;
     //}
-    void fixDelete(RBTreeNode<T>* x) {
-        if (x == nullptr) return;
 
+    void fixDelete(RBTreeNode<T>* x) {
         while (x != _root && (x == nullptr || x->color == BLACK)) {
             if (x == x->parent->left) {
                 RBTreeNode<T>* s = x->parent->right;
 
+                // Проверка на nullptr брата
+                if (s == nullptr) break;
+
                 // Случай 1: брат красный
-                if (s != nullptr && s->color == RED) {
+                if (s->color == RED) {
                     s->color = BLACK;
                     x->parent->color = RED;
                     rotateLeft(x->parent);
                     s = x->parent->right;
+                    if (s == nullptr) break;  // Добавляем проверку после поворота
                 }
 
-                // Случай 2: оба ребенка брата черные
-                if ((s == nullptr) ||
-                    ((s->left == nullptr || s->left->color == BLACK) &&
-                        (s->right == nullptr || s->right->color == BLACK))) {
-                    if (s != nullptr) s->color = RED;
-                    x->parent->color = BLACK;
+                // Случай 2: оба ребенка брата черные (с проверками на nullptr)
+                if ((s->left == nullptr || s->left->color == BLACK) &&
+                    (s->right == nullptr || s->right->color == BLACK)) {
+                    s->color = RED;
                     x = x->parent;
                 }
                 else {
                     // Случай 3: правый ребенок брата черный
                     if (s->right == nullptr || s->right->color == BLACK) {
-                        if (s->left != nullptr) s->left->color = BLACK;
+                        if (s->left != nullptr) {
+                            s->left->color = BLACK;
+                        }
                         s->color = RED;
                         rotateRight(s);
                         s = x->parent->right;
+                        if (s == nullptr) break;  // Проверка после поворота
                     }
 
                     // Случай 4: левый ребенок брата черный
-                    if (s != nullptr) {
-                        s->color = x->parent->color;
-                        x->parent->color = BLACK;
-                        if (s->right != nullptr) s->right->color = BLACK;
-                        rotateLeft(x->parent);
+                    s->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    if (s->right != nullptr) {
+                        s->right->color = BLACK;
                     }
+                    rotateLeft(x->parent);
                     x = _root;
                 }
             }
@@ -501,38 +515,50 @@ private:
                 // Симметричный случай для правого ребенка
                 RBTreeNode<T>* s = x->parent->left;
 
-                if (s != nullptr && s->color == RED) {
+                if (s == nullptr) break;
+
+                // Случай 1: брат красный
+                if (s->color == RED) {
                     s->color = BLACK;
                     x->parent->color = RED;
                     rotateRight(x->parent);
                     s = x->parent->left;
+                    if (s == nullptr) break;
                 }
 
-                if ((s == nullptr) ||
-                    ((s->right == nullptr || s->right->color == BLACK) &&
-                        (s->left == nullptr || s->left->color == BLACK))) {
-                    if (s != nullptr) s->color = RED;
+                // Случай 2: оба ребенка брата черные
+                if ((s->right == nullptr || s->right->color == BLACK) &&
+                    (s->left == nullptr || s->left->color == BLACK)) {
+                    s->color = RED;
                     x = x->parent;
                 }
                 else {
+                    // Случай 3: левый ребенок брата черный
                     if (s->left == nullptr || s->left->color == BLACK) {
-                        if (s->right != nullptr) s->right->color = BLACK;
+                        if (s->right != nullptr) {
+                            s->right->color = BLACK;
+                        }
                         s->color = RED;
                         rotateLeft(s);
                         s = x->parent->left;
+                        if (s == nullptr) break;
                     }
 
-                    if (s != nullptr) {
-                        s->color = x->parent->color;
-                        x->parent->color = BLACK;
-                        if (s->left != nullptr) s->left->color = BLACK;
-                        rotateRight(x->parent);
+                    // Случай 4: правый ребенок брата черный
+                    s->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    if (s->left != nullptr) {
+                        s->left->color = BLACK;
                     }
+                    rotateRight(x->parent);
                     x = _root;
                 }
             }
         }
-        if (x != nullptr) x->color = BLACK;
+
+        if (x != nullptr) {
+            x->color = BLACK;
+        }
     }
 
     RBTreeNode<T>* searchHelper(RBTreeNode<T>* node, T val) const {
@@ -617,7 +643,23 @@ private:
         u->left = nullptr;
         u->right = nullptr;
     }
+    void transplant2(RBTreeNode<T>* u, RBTreeNode<T>* v) {
+        if (u == nullptr) return;
 
+        if (u->parent == nullptr) {
+            _root = v;
+        }
+        else if (u == u->parent->left) {
+            u->parent->left = v;
+        }
+        else {
+            u->parent->right = v;
+        }
+
+        if (v != nullptr) {
+            v->parent = u->parent;
+        }
+    }
     void printHelper(RBTreeNode<T>* root, std::string indent, bool last) const {
         if (root != nullptr) {
             std::cout << indent;

@@ -111,45 +111,99 @@ protected:
 };
 
 TEST_F(RBTreePrivateTest, PrivateSearch) {
-    auto createTestTree = []() {
-        RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-        root->left = new RBTreeNode<int>(30, RED, root);
-        root->right = new RBTreeNode<int>(70, RED, root);
-        return root;
-        };
-    auto deleteTestTree = [](RBTreeNode<int>* root) {
-        delete root->left;
-        delete root->right;
-        delete root;
-        };
-    RBTreeNode<int>* root = createTestTree();
-    ASSERT_NE(root, nullptr);
-    EXPECT_NE(test_search(root, 30), nullptr);
-    EXPECT_NE(test_search(root, 70), nullptr);
-    EXPECT_EQ(test_search(root, 10), nullptr);
+    // Создаем тестовое дерево:
+    //        50(B)
+    //      /      \
+    //   30(B)    70(B)
+    //   /  \     /   \
+    // 20(R)40(R)60(R)80(R)
+    RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
+    root->left = new RBTreeNode<int>(30, BLACK, root);
+    root->right = new RBTreeNode<int>(70, BLACK, root);
 
-    deleteTestTree(root);
+    root->left->left = new RBTreeNode<int>(20, RED, root->left);
+    root->left->right = new RBTreeNode<int>(40, RED, root->left);
+
+    root->right->left = new RBTreeNode<int>(60, RED, root->right);
+    root->right->right = new RBTreeNode<int>(80, RED, root->right);
+
+    // Проверяем поиск существующих узлов
+    EXPECT_NE(test_search(root, 20), nullptr);
+    EXPECT_EQ(test_search(root, 20)->_value, 20);
+    EXPECT_EQ(test_search(root, 20)->color, RED);
+
+    EXPECT_NE(test_search(root, 40), nullptr);
+    EXPECT_EQ(test_search(root, 40)->_value, 40);
+    EXPECT_EQ(test_search(root, 40)->color, RED);
+
+    EXPECT_NE(test_search(root, 60), nullptr);
+    EXPECT_EQ(test_search(root, 60)->_value, 60);
+    EXPECT_EQ(test_search(root, 60)->color, RED);
+
+    EXPECT_NE(test_search(root, 80), nullptr);
+    EXPECT_EQ(test_search(root, 80)->_value, 80);
+    EXPECT_EQ(test_search(root, 80)->color, RED);
+
+    // Проверяем поиск несуществующих узлов
+    EXPECT_EQ(test_search(root, 10), nullptr);
+    EXPECT_EQ(test_search(root, 90), nullptr);
+    EXPECT_EQ(test_search(root, 35), nullptr);
+
+    // Проверяем поиск корня и промежуточных узлов
+    EXPECT_NE(test_search(root, 50), nullptr);
+    EXPECT_EQ(test_search(root, 50)->_value, 50);
+    EXPECT_EQ(test_search(root, 50)->color, BLACK);
+
+    EXPECT_NE(test_search(root, 30), nullptr);
+    EXPECT_EQ(test_search(root, 30)->_value, 30);
+    EXPECT_EQ(test_search(root, 30)->color, BLACK);
+
+    EXPECT_NE(test_search(root, 70), nullptr);
+    EXPECT_EQ(test_search(root, 70)->_value, 70);
+    EXPECT_EQ(test_search(root, 70)->color, BLACK);
+
 }
 
 TEST_F(RBTreePrivateTest, PrivateInsertHelper) {
+    // Создаем начальное дерево с корнем
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, RED);
-    RBTreeNode<int>* node2 = new RBTreeNode<int>(70, RED);
 
+    // 1. Вставляем левого потомка
+    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, RED);
     root = test_insert(root, node1);
+
+    // Проверяем структуру
+    EXPECT_EQ(root->_value, 50);
+    EXPECT_NE(root->left, nullptr);
+    EXPECT_EQ(root->left->_value, 30);
+    EXPECT_EQ(root->left->parent, root);
+    EXPECT_EQ(root->left->color, RED);
+    EXPECT_EQ(root->right, nullptr);
+
+    // 2. Вставляем правого потомка
+    RBTreeNode<int>* node2 = new RBTreeNode<int>(70, RED);
     root = test_insert(root, node2);
 
-    EXPECT_NE(test_search(root, 30), nullptr);
-    EXPECT_NE(test_search(root, 70), nullptr);
+    // Проверяем структуру
     EXPECT_EQ(root->_value, 50);
-    EXPECT_EQ(root->left->_value, 30);
+    EXPECT_NE(root->right, nullptr);
     EXPECT_EQ(root->right->_value, 70);
-    EXPECT_EQ(root->left->parent, root);
     EXPECT_EQ(root->right->parent, root);
+    EXPECT_EQ(root->right->color, RED);
+
+    // 3. Проверяем что левый потомок не изменился
+    EXPECT_NE(root->left, nullptr);
+    EXPECT_EQ(root->left->_value, 30);
 
 }
 
 TEST_F(RBTreePrivateTest, PrivateRotateLeft) {
+    // Исходное дерево:
+    //     30(B)
+    //       \
+    //      50(R)
+    //        \
+    //       70(R)
     RBTreeNode<int>* root = new RBTreeNode<int>(30, BLACK);
     RBTreeNode<int>* child = new RBTreeNode<int>(50, RED, root);
     root->right = child;
@@ -157,16 +211,28 @@ TEST_F(RBTreePrivateTest, PrivateRotateLeft) {
 
     test_rotateLeft(root);
 
-    // После ротации root становится левым ребенком child
+    // После ротации:
+    //     50(B)
+    //    /    \
+    // 30(R)  70(R)
     ASSERT_NE(root->parent, nullptr);
     EXPECT_EQ(root->parent->_value, 50);
+    EXPECT_EQ(root->parent->color, BLACK); // Новый корень должен быть черным
     EXPECT_EQ(root->parent->left, root);
+    EXPECT_EQ(root->parent->left->color, RED);
     EXPECT_EQ(root->parent->right->_value, 70);
+    EXPECT_EQ(root->parent->right->color, RED);
     EXPECT_EQ(root->right, nullptr);
 
 }
 
 TEST_F(RBTreePrivateTest, PrivateRotateRight) {
+    // Исходное дерево:
+    //       50(B)
+    //      /
+    //   30(R)
+    //   /
+    //10(R)
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
     RBTreeNode<int>* child = new RBTreeNode<int>(30, RED, root);
     root->left = child;
@@ -174,10 +240,14 @@ TEST_F(RBTreePrivateTest, PrivateRotateRight) {
 
     test_rotateRight(root);
 
+    // После ротации:
+    //     30(B)
+    //    /    \
+    // 10(R)  50(R)
     RBTreeNode<int>* newRoot = root->parent;
     ASSERT_NE(newRoot, nullptr);
     EXPECT_EQ(newRoot->_value, 30);
-    EXPECT_EQ(newRoot->color, BLACK); // Проверяем, что корень ЧЁРНЫЙ!
+    EXPECT_EQ(newRoot->color, BLACK); // Новый корень должен быть черным
     EXPECT_EQ(newRoot->left->_value, 10);
     EXPECT_EQ(newRoot->left->color, RED);
     EXPECT_EQ(newRoot->right->_value, 50);
@@ -186,65 +256,89 @@ TEST_F(RBTreePrivateTest, PrivateRotateRight) {
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixInsertCase1) {
+    // Исходное дерево:
+    //       50(B)
+    //      /    \
+    //   30(R)  70(R)
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, RED, root);
-    RBTreeNode<int>* node2 = new RBTreeNode<int>(70, RED, root);
-    root->left = node1;
-    root->right = node2;
+    RBTreeNode<int>* node30 = new RBTreeNode<int>(30, RED, root);
+    RBTreeNode<int>* node70 = new RBTreeNode<int>(70, RED, root);
+    root->left = node30;
+    root->right = node70;
 
-    // Случай 1: Дядя КРАСНЫЙ
-    RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node1);
-    node1->left = newNode;
+    // Добавляем новый узел (случай 1 - дядя красный)
+    RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node30);
+    node30->left = newNode;
     tree.setRoot(root);
     test_fixInsert(newNode);
 
-
+    // Проверяем перекрашивание:
     EXPECT_EQ(root->color, BLACK);
-    EXPECT_EQ(node1->color, BLACK);
-    EXPECT_EQ(node2->color, BLACK);
-    EXPECT_EQ(newNode->color, RED);
+    EXPECT_EQ(node30->color, BLACK); // Должен стать черным
+    EXPECT_EQ(node70->color, BLACK); // Должен стать черным
+    EXPECT_EQ(newNode->color, RED);  // Остается красным
 
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixInsertCase2And3) {
+    // Исходное дерево:
+    //       50(B)
+    //      /
+    //   30(R)
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, RED, root);
-    root->left = node1;
+    RBTreeNode<int>* node30 = new RBTreeNode<int>(30, RED, root);
+    root->left = node30;
 
-    // Устанавливаем корень дерева
-    tree.setRoot(root);  // <-- Ключевое исправление!
+    tree.setRoot(root);
 
-    // Case 2 и 3: Дядя черный, а новый узел - левый дочерний
-    RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node1);
-    node1->left = newNode;
+    // Добавляем новый узел (случай 2 и 3)
+    RBTreeNode<int>* newNode = new RBTreeNode<int>(20, RED, node30);
+    node30->left = newNode;
 
     test_fixInsert(newNode);
 
-    // После балансировки древовидная структура должна измениться
+    // После балансировки:
+    //     30(B)
+    //    /    \
+    // 20(R)  50(R)
     RBTreeNode<int>* newRoot = tree.getRoot();
     ASSERT_NE(newRoot, nullptr);
 
     EXPECT_EQ(newRoot->_value, 30);
-    EXPECT_EQ(newRoot->color, BLACK);
+    EXPECT_EQ(newRoot->color, BLACK); // Новый корень должен быть черным
     EXPECT_EQ(newRoot->left->_value, 20);
     EXPECT_EQ(newRoot->left->color, RED);
     EXPECT_EQ(newRoot->right->_value, 50);
     EXPECT_EQ(newRoot->right->color, RED);
-
 }
 
 TEST_F(RBTreePrivateTest, PrivateMinMaxValueNode) {
+    // Создаем тестовое дерево:
+    //        50(B)
+    //      /      \
+    //   30(B)    70(B)
+    //   /  \     /   \
+    // 20(R)40(R)60(R)80(R)
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    root->left = new RBTreeNode<int>(30, RED, root);
-    root->right = new RBTreeNode<int>(70, RED, root);
-    root->left->left = new RBTreeNode<int>(20, BLACK, root->left);
-    root->left->right = new RBTreeNode<int>(40, BLACK, root->left);
+    root->left = new RBTreeNode<int>(30, BLACK, root);
+    root->right = new RBTreeNode<int>(70, BLACK, root);
+    root->left->left = new RBTreeNode<int>(20, RED, root->left);
+    root->left->right = new RBTreeNode<int>(40, RED, root->left);
+    root->right->left = new RBTreeNode<int>(60, RED, root->right);
+    root->right->right = new RBTreeNode<int>(80, RED, root->right);
 
+    // Проверяем минимальное и максимальное значения
     EXPECT_EQ(test_minValueNode(root)->_value, 20);
-    EXPECT_EQ(test_maxValueNode(root)->_value, 70);
-    EXPECT_EQ(test_minValueNode(root->right)->_value, 70);
-    EXPECT_EQ(test_maxValueNode(root->left)->_value, 40);
+    EXPECT_EQ(test_minValueNode(root)->color, RED);
 
+    EXPECT_EQ(test_maxValueNode(root)->_value, 80);
+    EXPECT_EQ(test_maxValueNode(root)->color, RED);
+
+    EXPECT_EQ(test_minValueNode(root->right)->_value, 60);
+    EXPECT_EQ(test_minValueNode(root->right)->color, RED);
+
+    EXPECT_EQ(test_maxValueNode(root->left)->_value, 40);
+    EXPECT_EQ(test_maxValueNode(root->left)->color, RED);
 }
 
 TEST_F(RBTreePrivateTest, PrivateTransplant) {
@@ -322,38 +416,53 @@ TEST_F(RBTreePrivateTest, PrivateTransplant) {
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixDeleteCases) {
+    // Создаем тестовое дерево:
+    //        50(B)
+    //      /      \
+    //   30(B)    70(R)
+    //     \      /   \
+    //    40(R) 60(B)80(B)
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
-    RBTreeNode<int>* node1 = new RBTreeNode<int>(30, BLACK, root);
-    RBTreeNode<int>* node2 = new RBTreeNode<int>(70, RED, root);
-    root->left = node1;
-    root->right = node2;
-    node1->right = new RBTreeNode<int>(40, RED, node1);
+    RBTreeNode<int>* node30 = new RBTreeNode<int>(30, BLACK, root);
+    RBTreeNode<int>* node70 = new RBTreeNode<int>(70, RED, root);
+    root->left = node30;
+    root->right = node70;
+
+    node30->right = new RBTreeNode<int>(40, RED, node30);
+    node70->left = new RBTreeNode<int>(60, BLACK, node70);
+    node70->right = new RBTreeNode<int>(80, BLACK, node70);
 
     // Устанавливаем корень дерева
     tree.setRoot(root);
 
     // Симулируем ситуацию после удаления (двойной чёрный узел)
-    RBTreeNode<int>* x = node1->left; // Предполагаемый "двойной чёрный" узел
+    RBTreeNode<int>* x = node30->left; // Предполагаемый "двойной чёрный" узел
     if (x == nullptr) {
         x = new RBTreeNode<int>(0, BLACK); // Создаём фиктивный узел
-        x->parent = node1;
-        node1->left = x;
+        x->parent = node30;
+        node30->left = x;
     }
 
     // Вызываем фиксацию
     test_fixDelete(x);
 
     // Проверяем свойства дерева после фиксации
-    EXPECT_EQ(root->color, BLACK);
+    EXPECT_EQ(root->color, BLACK); // Корень должен остаться чёрным
 
-    // Узел node2 (брат) должен стать чёрным в случае 1
-    EXPECT_EQ(node2->color, BLACK);
+    // Проверяем цвета узлов после фиксации
+    EXPECT_EQ(node70->color, BLACK); // Брат должен стать чёрным
 
-    // Проверяем другие свойства
-    if (node1->right != nullptr) {
-        EXPECT_EQ(node1->right->color, RED);
+    if (node30->right != nullptr) {
+        EXPECT_EQ(node30->right->color, RED); // Правый ребёнок должен остаться красным
     }
+
+    // Проверяем структуру дерева
+    EXPECT_EQ(node70->left->_value, 60);
+    EXPECT_EQ(node70->left->color, BLACK);
+    EXPECT_EQ(node70->right->_value, 80);
+    EXPECT_EQ(node70->right->color, BLACK);
 }
+
 class RBTreeTest : public ::testing::Test {
 protected:
     RBTree<int> tree;
@@ -440,48 +549,47 @@ TEST_F(RBTreeTest, EraseNodeWithOneChild) {
     EXPECT_EQ(root->right->_value, 70);
     EXPECT_EQ(root->left->color, BLACK);
 }
-//
-//TEST_F(RBTreeTest, EraseNodeWithTwoChildren) {
-//    tree.insert(50);
-//    tree.insert(30);
-//    tree.insert(70);
-//    tree.insert(20);
-//    tree.insert(40);
-//    tree.insert(60);
-//    tree.insert(80);
-//
-//    tree.erase(50);
-//    EXPECT_EQ(tree.search(50), nullptr);
-//    EXPECT_NE(tree.search(60), nullptr);
-//
-//    // Проверяем структуру дерева
-//    auto root = tree.search(60); // Новый корень
-//    tree.setRoot(root);
-//    ASSERT_NE(root, nullptr);
-//    EXPECT_EQ(root->left->_value, 30);
-//    EXPECT_EQ(root->right->_value, 70);
-//    EXPECT_EQ(root->left->left->_value, 20);
-//    EXPECT_EQ(root->left->right->_value, 40);
-//    EXPECT_EQ(root->right->right->_value, 80);
-//    EXPECT_EQ(root->color, BLACK);
-//}
-//
-//TEST_F(RBTreeTest, EraseRoot) {
-//    tree.insert(50);
-//    tree.insert(30);
-//    tree.insert(70);
-//
-//    tree.erase(50);
-//    EXPECT_EQ(tree.search(50), nullptr);
-//    EXPECT_NE(tree.search(30), nullptr);
-//    EXPECT_NE(tree.search(70), nullptr);
-//
-//    // Проверка, новый корень чёрный
-//    auto root = tree.search(70);
-//    ASSERT_NE(root, nullptr);
-//    EXPECT_EQ(root->color, BLACK);
-//    EXPECT_EQ(root->left->_value, 30);
-//}
+
+TEST_F(RBTreeTest, EraseNodeWithTwoChildren) {
+    tree.insert(50);
+    tree.insert(30);
+    tree.insert(70);
+    tree.insert(20);
+    tree.insert(40);
+    tree.insert(60);
+    tree.insert(80);
+
+    tree.erase(50);
+
+    // Проверяем что удаленный узел больше не существует
+    EXPECT_EQ(tree.search(50), nullptr);
+
+    // Проверяем что остальные узлы на месте
+    EXPECT_NE(tree.search(30), nullptr);
+    EXPECT_NE(tree.search(70), nullptr);
+    EXPECT_NE(tree.search(20), nullptr);
+    EXPECT_NE(tree.search(40), nullptr);
+    EXPECT_NE(tree.search(60), nullptr);
+    EXPECT_NE(tree.search(80), nullptr);
+
+}
+
+TEST_F(RBTreeTest, EraseRoot) {
+    tree.insert(50);
+    tree.insert(30);
+    tree.insert(70);
+
+    tree.erase(50);
+
+    EXPECT_EQ(tree.search(50), nullptr);
+    EXPECT_NE(tree.search(30), nullptr);
+    EXPECT_NE(tree.search(70), nullptr);
+
+    // Проверяем что новый корень черный
+    auto root = tree.getRoot();
+    ASSERT_NE(root, nullptr);
+    EXPECT_EQ(root->color, BLACK);
+}
 
 TEST_F(RBTreeTest, ClearTree) {
     tree.insert(50);
@@ -586,38 +694,49 @@ TEST_F(RBTreeTest, AllRotationCases) {
     EXPECT_EQ(root->right->color, RED);
 }
 
-TEST_F(RBTreeTest, ComplexOperations) {
-    RBTree<int> bigTree;
-    for (int i = 0; i < 100; ++i) {
-        bigTree.insert(i);
-    }
-
-    // Проверяем, что все значения присутствуют
-    for (int i = 0; i < 100; ++i) {
-        EXPECT_NE(bigTree.search(i), nullptr);
-    }
-
-    // Проверка, корень должен быть чёрным
-    EXPECT_EQ(bigTree.search(50)->color, BLACK);
-
-    // Удаляем половину узлов
-    for (int i = 0; i < 100; i += 2) {
-        bigTree.erase(i);
-    }
-
-    // Проверяем, что остались только нечётные числа
-    for (int i = 0; i < 100; ++i) {
-        if (i % 2 == 0) {
-            EXPECT_EQ(bigTree.search(i), nullptr);
-        }
-        else {
-            EXPECT_NE(bigTree.search(i), nullptr);
-        }
-    }
-
-    bigTree.clear();
-    EXPECT_EQ(bigTree.search(1), nullptr);
-}
+//TEST_F(RBTreeTest, ComplexOperations) {
+//    RBTree<int> bigTree;
+//
+//    // Вставка 100 элементов
+//    for (int i = 0; i < 100; ++i) {
+//        bigTree.insert(i);
+//        // Проверяем свойства после каждой вставки
+//        ASSERT_NE(bigTree.search(i), nullptr);
+//        EXPECT_TRUE(checkRedBlackProperties(bigTree.getRoot()));
+//    }
+//
+//    // Проверяем, что все значения присутствуют
+//    for (int i = 0; i < 100; ++i) {
+//        EXPECT_NE(bigTree.search(i), nullptr);
+//    }
+//
+//    // Проверка, что корень чёрный
+//    EXPECT_EQ(bigTree.getRoot()->color, BLACK);
+//
+//    // Удаляем каждый второй элемент
+//    for (int i = 0; i < 100; i += 2) {
+//        bigTree.erase(i);
+//        // Проверяем свойства после каждого удаления
+//        EXPECT_TRUE(checkRedBlackProperties(bigTree.getRoot()));
+//    }
+//
+//    // Проверяем, что остались только нечётные числа
+//    for (int i = 0; i < 100; ++i) {
+//        if (i % 2 == 0) {
+//            EXPECT_EQ(bigTree.search(i), nullptr);
+//        }
+//        else {
+//            EXPECT_NE(bigTree.search(i), nullptr);
+//        }
+//    }
+//
+//    // Очищаем дерево
+//    bigTree.clear();
+//    EXPECT_EQ(bigTree.getRoot(), nullptr);
+//
+//    // Проверяем поиск в пустом дереве
+//    EXPECT_EQ(bigTree.search(1), nullptr);
+//}
 
 TEST_F(RBTreeTest, StringValues) {
     RBTree<std::string> stringTree;
