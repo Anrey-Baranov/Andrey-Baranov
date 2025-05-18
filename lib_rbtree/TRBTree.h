@@ -502,12 +502,14 @@ private:
                     }
 
                     // Случай 4: левый ребенок брата черный
-                    s->color = x->parent->color;
-                    x->parent->color = BLACK;
-                    if (s->right != nullptr) {
-                        s->right->color = BLACK;
+                    if (s != nullptr) {
+                        s->color = BLACK;
+                        x->parent->color = BLACK;
+                        if (s->right != nullptr) {
+                            s->right->color = BLACK;
+                        }
+                        rotateLeft(x->parent);
                     }
-                    rotateLeft(x->parent);
                     x = _root;
                 }
             }
@@ -545,12 +547,14 @@ private:
                     }
 
                     // Случай 4: правый ребенок брата черный
-                    s->color = x->parent->color;
-                    x->parent->color = BLACK;
-                    if (s->left != nullptr) {
-                        s->left->color = BLACK;
+                    if (s != nullptr) {
+                        s->color = BLACK;
+                        x->parent->color = BLACK;
+                        if (s->left != nullptr) {
+                            s->left->color = BLACK;
+                        }
+                        rotateRight(x->parent);
                     }
-                    rotateRight(x->parent);
                     x = _root;
                 }
             }

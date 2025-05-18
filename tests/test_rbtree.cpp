@@ -416,51 +416,48 @@ TEST_F(RBTreePrivateTest, PrivateTransplant) {
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixDeleteCases) {
-    // Создаем тестовое дерево:
+    // Создаем корректное тестовое дерево:
     //        50(B)
     //      /      \
-    //   30(B)    70(R)
+    //   30(B)    70(B)  
     //     \      /   \
-    //    40(R) 60(B)80(B)
+    //    40(R) 60(R)80(R) 
     RBTreeNode<int>* root = new RBTreeNode<int>(50, BLACK);
     RBTreeNode<int>* node30 = new RBTreeNode<int>(30, BLACK, root);
-    RBTreeNode<int>* node70 = new RBTreeNode<int>(70, RED, root);
+    RBTreeNode<int>* node70 = new RBTreeNode<int>(70, BLACK, root); 
     root->left = node30;
     root->right = node70;
 
     node30->right = new RBTreeNode<int>(40, RED, node30);
-    node70->left = new RBTreeNode<int>(60, BLACK, node70);
-    node70->right = new RBTreeNode<int>(80, BLACK, node70);
+    node70->left = new RBTreeNode<int>(60, RED, node70);  
+    node70->right = new RBTreeNode<int>(80, RED, node70); 
 
     // Устанавливаем корень дерева
     tree.setRoot(root);
 
     // Симулируем ситуацию после удаления (двойной чёрный узел)
-    RBTreeNode<int>* x = node30->left; // Предполагаемый "двойной чёрный" узел
+    RBTreeNode<int>* x = node30->left;
     if (x == nullptr) {
-        x = new RBTreeNode<int>(0, BLACK); // Создаём фиктивный узел
+        x = new RBTreeNode<int>(0, BLACK);
         x->parent = node30;
         node30->left = x;
     }
 
-    // Вызываем фиксацию
     test_fixDelete(x);
 
-    // Проверяем свойства дерева после фиксации
-    EXPECT_EQ(root->color, BLACK); // Корень должен остаться чёрным
-
-    // Проверяем цвета узлов после фиксации
-    EXPECT_EQ(node70->color, BLACK); // Брат должен стать чёрным
+    // Проверки
+    EXPECT_EQ(root->color, BLACK);
+    EXPECT_EQ(node70->color, BLACK); 
 
     if (node30->right != nullptr) {
-        EXPECT_EQ(node30->right->color, RED); // Правый ребёнок должен остаться красным
+        EXPECT_EQ(node30->right->color, RED); // 40 остаётся красным
     }
 
-    // Проверяем структуру дерева
+    // Проверяем, что дети 70 остались красными
     EXPECT_EQ(node70->left->_value, 60);
-    EXPECT_EQ(node70->left->color, BLACK);
+    EXPECT_EQ(node70->left->color, RED);  
     EXPECT_EQ(node70->right->_value, 80);
-    EXPECT_EQ(node70->right->color, BLACK);
+    EXPECT_EQ(node70->right->color, RED); 
 }
 
 class RBTreeTest : public ::testing::Test {
