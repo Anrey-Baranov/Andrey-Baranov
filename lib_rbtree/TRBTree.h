@@ -37,6 +37,9 @@ public:
     ~RBTree() { clear(); }
 
     void insert(T val) {
+        if (search(val) != nullptr) {
+            return;  // Дубликат - игнорируем
+        }
         RBTreeNode<T>* node = new RBTreeNode<T>(val);
         _root = insertHelper(_root, node);
         if (_root->parent != nullptr) {  // Дополнительная проверка
@@ -239,11 +242,6 @@ private:
         // Всегда сохраняем цвет исходного корня
         y->color = x->color;
         x->color = RED;  // Старый корень становится красным
-
-        //// Если y стал глобальным корнем, делаем его чёрным
-        //if (y == _root) {
-        //    y->color = BLACK;
-        //}
     }
     void fixInsert(RBTreeNode<T>* k) {
         if (k == nullptr || k == _root) return;
@@ -385,7 +383,7 @@ private:
 
     RBTreeNode<T>* insertHelper(RBTreeNode<T>* root, RBTreeNode<T>* pt) {
         if (root == nullptr) {
-            pt->parent = nullptr;  // Убедимся, что новый узел имеет parent = nullptr
+            pt->parent = nullptr;
             return pt;
         }
 
@@ -396,6 +394,11 @@ private:
         else if (pt->_value > root->_value) {
             root->right = insertHelper(root->right, pt);
             root->right->parent = root;
+        }
+        else {
+            // Дубликат: игнорируем вставку и удаляем новый узел
+            delete pt;
+            return root;
         }
         return root;
     }
@@ -444,7 +447,11 @@ private:
         if (v != nullptr) {
             v->parent = u->parent;
         }
-    }
+        // Обнуляем ссылки у заменяемого узла
+        u->parent = nullptr;
+        u->left = nullptr;
+        u->right = nullptr;
+     }
 
     void printHelper(RBTreeNode<T>* root, std::string indent, bool last) const {
         if (root != nullptr) {
