@@ -36,7 +36,7 @@ private:
     size_t _size = 0;  // Добавляем счетчик элементов
 
 public:
-    oid insert(const KeyType& key, const ValueType& value) {
+    void insert(const KeyType& key, const ValueType& value) {
         ComparablePair<KeyType, ValueType> newPair(key, value);
         auto found = _data.search(newPair);
         if (found) {

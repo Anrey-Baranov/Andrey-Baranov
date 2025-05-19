@@ -7,7 +7,6 @@
 #include "../lib_rbtree/TRBTree.h"
 
 int main() {
-    // Устанавливаем русскую локаль и кодировку для консоли
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
     setlocale(LC_ALL, "Russian");
@@ -33,6 +32,7 @@ int main() {
     tree.insert(65);
     tree.insert(75);
     tree.insert(90);
+    tree.insert(66);
 
     std::cout << "\nДерево после вставки элементов:\n";
     tree.print();
@@ -43,8 +43,10 @@ int main() {
 
     // Удаление элементов
     std::cout << "\nУдаление элементов 20 и 70:\n";
-    tree.erase(20);
+   /* tree.erase(20);*/
     tree.erase(70);
+    tree.erase(60);
+    tree.erase(65);
     tree.print();
 
     // Поуровневый обход
