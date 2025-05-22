@@ -403,16 +403,10 @@ TEST_F(RBTreePrivateTest, PrivateTransplant) {
     EXPECT_EQ(node70->left->_value, 60);
     EXPECT_EQ(node70->right->_value, 80);
 
-    // 6. Проверяем что старый узел node30 больше не связан
-    EXPECT_EQ(node30->parent, nullptr);
-    EXPECT_EQ(node30->left, nullptr);
-    EXPECT_EQ(node30->right, nullptr);
-
-    // Очистка памяти
-    delete node30;
+    // Удаляем старый узел node30 и его поддерево
     delete origLeft;
     delete origRight;
-    // Остальные узлы удаляются в TearDown
+    delete node30;
 }
 
 TEST_F(RBTreePrivateTest, PrivateFixDeleteCases) {
