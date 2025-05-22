@@ -28,7 +28,9 @@ public:
     const ValueType second() const { return pair.second(); }  // Константная версия
 
     const TPair<KeyType, ValueType>& getPair() const { return pair; }
+
 };
+
 template <typename KeyType, typename ValueType>
 class TBSTTable {
 private:
@@ -89,13 +91,16 @@ public:
         std::stack<BTreeNode<ComparablePair<KeyType, ValueType>>*> node_stack;
         BTreeNode<ComparablePair<KeyType, ValueType>>* current;
 
+        void push_left(BTreeNode<ComparablePair<KeyType, ValueType>>* node) {
+            while (node != nullptr) {
+                node_stack.push(node);
+                node = node->left;
+            }
+        }
+
     public:
         explicit iterator(BTreeNode<ComparablePair<KeyType, ValueType>>* root) {
-            // Инициализация - идем до крайнего левого узла
-            while (root) {
-                node_stack.push(root);
-                root = root->left;
-            }
+            push_left(root);
             if (!node_stack.empty()) {
                 current = node_stack.top();
                 node_stack.pop();
@@ -110,12 +115,12 @@ public:
         }
 
         iterator& operator++() {
-            if (current->right) {
-                auto node = current->right;
-                while (node) {
-                    node_stack.push(node);
-                    node = node->left;
-                }
+            if (current == nullptr) {
+                return *this;
+            }
+
+            if (current->right != nullptr) {
+                push_left(current->right);
             }
 
             if (!node_stack.empty()) {
@@ -134,7 +139,11 @@ public:
     };
 
     iterator begin() {
-        return iterator(_data.min());
+        BTreeNode<ComparablePair<KeyType, ValueType>>* node = _data.getRoot();
+        while (node != nullptr && node->left != nullptr) {
+            node = node->left;
+        }
+        return iterator(_data.getRoot());
     }
 
     iterator end() {

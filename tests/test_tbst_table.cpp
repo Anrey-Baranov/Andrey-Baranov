@@ -1,5 +1,5 @@
 #include "gtest.h"
-#include "TBSTTable.h"
+#include "../lib_tbst_table/TBSTTable.h"
 
 template class TBSTTable<int, int>;
 
@@ -7,14 +7,12 @@ class TBSTTablePrivateTest : public ::testing::Test {
 protected:
     TBSTTable<int, int> table;
 
-    void SetUp() override {
-        table.insert(50, 500);
-        table.insert(30, 300);
-        table.insert(70, 700);
-    }
 };
 
 TEST_F(TBSTTablePrivateTest, InsertAndFind) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
     int value;
     EXPECT_TRUE(table.find(50, value));
     EXPECT_EQ(value, 500);
@@ -24,6 +22,9 @@ TEST_F(TBSTTablePrivateTest, InsertAndFind) {
 }
 
 TEST_F(TBSTTablePrivateTest, Erase) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
     EXPECT_TRUE(table.erase(30));
     int value;
     EXPECT_FALSE(table.find(30, value));
@@ -33,6 +34,9 @@ TEST_F(TBSTTablePrivateTest, Erase) {
 }
 
 TEST_F(TBSTTablePrivateTest, Clear) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
     table.clear();
     int value;
     EXPECT_FALSE(table.find(50, value));
@@ -40,6 +44,9 @@ TEST_F(TBSTTablePrivateTest, Clear) {
 }
 
 TEST_F(TBSTTablePrivateTest, EmptyAndSize) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
     EXPECT_FALSE(table.empty());
     EXPECT_EQ(table.size(), 3);
 
@@ -49,12 +56,16 @@ TEST_F(TBSTTablePrivateTest, EmptyAndSize) {
 }
 
 TEST_F(TBSTTablePrivateTest, Iterator) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
     std::vector<std::pair<int, int>> expected = {
         {30, 300}, {50, 500}, {70, 700}
     };
 
     size_t i = 0;
     for (auto it = table.begin(); it != table.end(); ++it) {
+        EXPECT_LT(i, expected.size());
         auto pair = *it;
         EXPECT_EQ(pair.first, expected[i].first);
         EXPECT_EQ(pair.second, expected[i].second);
@@ -67,18 +78,16 @@ class TBSTTableTest : public ::testing::Test {
 protected:
     TBSTTable<int, int> table;
 
-    void SetUp() override {
-        table.insert(50, 500);
-        table.insert(30, 300);
-        table.insert(70, 700);
-        table.insert(20, 200);
-        table.insert(40, 400);
-        table.insert(60, 600);
-        table.insert(80, 800);
-    }
 };
 
 TEST_F(TBSTTableTest, InitialState) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     TBSTTable<int, int> emptyTable;
     int value;
     EXPECT_FALSE(emptyTable.find(10, value));
@@ -86,6 +95,13 @@ TEST_F(TBSTTableTest, InitialState) {
 }
 
 TEST_F(TBSTTableTest, InsertAndFind) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     int value;
     EXPECT_TRUE(table.find(50, value));
     EXPECT_EQ(value, 500);
@@ -95,6 +111,13 @@ TEST_F(TBSTTableTest, InsertAndFind) {
 }
 
 TEST_F(TBSTTableTest, EraseLeafNode) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     EXPECT_TRUE(table.erase(20));
     int value;
     EXPECT_FALSE(table.find(20, value));
@@ -106,6 +129,13 @@ TEST_F(TBSTTableTest, EraseLeafNode) {
 }
 
 TEST_F(TBSTTableTest, EraseNodeWithOneChild) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     table.erase(20);
     EXPECT_TRUE(table.erase(30));
     int value;
@@ -115,6 +145,13 @@ TEST_F(TBSTTableTest, EraseNodeWithOneChild) {
 }
 
 TEST_F(TBSTTableTest, EraseNodeWithTwoChildren) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     EXPECT_TRUE(table.erase(50));
     int value;
     EXPECT_FALSE(table.find(50, value));
@@ -124,6 +161,13 @@ TEST_F(TBSTTableTest, EraseNodeWithTwoChildren) {
 }
 
 TEST_F(TBSTTableTest, ClearTable) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     table.clear();
     int value;
     EXPECT_FALSE(table.find(50, value));
@@ -135,6 +179,13 @@ TEST_F(TBSTTableTest, ClearTable) {
 }
 
 TEST_F(TBSTTableTest, IteratorTraversal) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     std::vector<std::pair<int, int>> expected = {
         {20, 200}, {30, 300}, {40, 400}, {50, 500},
         {60, 600}, {70, 700}, {80, 800}
@@ -142,6 +193,7 @@ TEST_F(TBSTTableTest, IteratorTraversal) {
 
     size_t i = 0;
     for (auto it = table.begin(); it != table.end(); ++it) {
+        EXPECT_LT(i, expected.size());
         auto pair = *it;
         EXPECT_EQ(pair.first, expected[i].first);
         EXPECT_EQ(pair.second, expected[i].second);
@@ -151,6 +203,13 @@ TEST_F(TBSTTableTest, IteratorTraversal) {
 }
 
 TEST_F(TBSTTableTest, DuplicateInsert) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     table.insert(50, 501); // Обновление значения
     int value;
     EXPECT_TRUE(table.find(50, value));
@@ -158,6 +217,13 @@ TEST_F(TBSTTableTest, DuplicateInsert) {
 }
 
 TEST_F(TBSTTableTest, ComplexOperations) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     TBSTTable<int, int> bigTable;
     for (int i = 0; i < 100; ++i) {
         bigTable.insert(i, i * 10);
@@ -188,6 +254,13 @@ TEST_F(TBSTTableTest, ComplexOperations) {
 }
 
 TEST_F(TBSTTableTest, StringKeys) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     TBSTTable<std::string, int> stringTable;
     stringTable.insert("apple", 1);
     stringTable.insert("banana", 2);
@@ -203,6 +276,13 @@ TEST_F(TBSTTableTest, StringKeys) {
 }
 
 TEST_F(TBSTTableTest, EmptyTableOperations) {
+    table.insert(50, 500);
+    table.insert(30, 300);
+    table.insert(70, 700);
+    table.insert(20, 200);
+    table.insert(40, 400);
+    table.insert(60, 600);
+    table.insert(80, 800);
     TBSTTable<int, int> emptyTable;
     int value;
     EXPECT_FALSE(emptyTable.find(10, value));
@@ -214,4 +294,6 @@ TEST_F(TBSTTableTest, EmptyTableOperations) {
     for (auto it = emptyTable.begin(); it != emptyTable.end(); ++it) {
         FAIL() << "Should not iterate empty table";
     }
+    
+
 }
