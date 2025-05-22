@@ -36,23 +36,52 @@ int main() {
 
     std::cout << "\nДерево после вставки элементов:\n";
     tree.print();
-
     // Поиск элемента
     auto found = tree.search(40);
     std::cout << "\nПоиск 40: " << (found ? "Найден" : "Не найден") << "\n";
 
     // Удаление элементов
-    std::cout << "\nУдаление элементов 20 и 70:\n";
-   /* tree.erase(20);*/
+    std::cout << "\nУдаление элементов 70,60 и 65:\n";
     tree.erase(70);
+    std::cout << "\n Удаляем 70:\n";
+    tree.print();
     tree.erase(60);
+    std::cout << "\n Удаляем 60:\n";
+    tree.print();
     tree.erase(65);
+    std::cout << "\n Удаляем 65:\n";
+    std::cout << "\nПроверка после удаления 65:\n";
+    std::cout << "65 " << (tree.search(65) ? "найден (ОШИБКА)" : "не найден (OK)") << "\n";
+    std::cout << "66 " << (tree.search(66) ? "найден (OK)" : "не найден (ОШИБКА)") << "\n";
+    tree.print();
+
+    tree.erase(10);
+    std::cout << "\n Удаляем 10:\n";
+    tree.print();
+
+    tree.erase(25);
+    std::cout << "\n Удаляем 25:\n";
+    tree.print();
+
+    tree.erase(35);
+    std::cout << "\n Удаляем 35:\n";
+    tree.print();
+
+    tree.erase(45);
+    std::cout << "\n Удаляем 45:\n";
+    tree.print();
+
+    tree.erase(55);
+    std::cout << "\n Удаляем 55:\n";
+    tree.print();
+
+    tree.erase(90);
+    std::cout << "\n Удаляем 90:\n";
     tree.print();
 
     // Поуровневый обход
     std::cout << "\nПоуровневый обход дерева:\n";
     tree.levelOrder();
-
     // Минимальное и максимальное значения (используем переименованные методы)
     auto minNode = tree.getMin();
     auto maxNode = tree.getMax();

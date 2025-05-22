@@ -22,6 +22,7 @@ public:
     RBTreeNode(T value, Color c = RED, RBTreeNode<T>* p = nullptr)
         : _value(value), color(c), left(nullptr), right(nullptr), parent(p) {
     }
+
 };
 
 template <class T>
@@ -49,46 +50,39 @@ public:
         }
         fixInsert(node);
     }
-    //попытаться повторить фрагмент
+
     void erase(T val) {
         RBTreeNode<T>* z = search(val);
         if (z == nullptr) return;
 
         RBTreeNode<T>* y = z;
         RBTreeNode<T>* x = nullptr;
+        RBTreeNode<T>* y_parent = nullptr;
         Color y_original_color = y->color;
 
         if (z->left == nullptr) {
             x = z->right;
-            transplant2(z, z->right);
+            transplant(z, z->right);
         }
         else if (z->right == nullptr) {
             x = z->left;
-            transplant2(z, z->left);
+            transplant(z, z->left);
         }
         else {
             y = minValueNode(z->right);
             y_original_color = y->color;
             x = y->right;
+            y_parent = y->parent; // Сохраняем родителя y
 
-            if (y != z->right) {
-                transplant2(y, y->right);
+            if (y->parent != z) {
+                transplant(y, y->right);
                 y->right = z->right;
-                if (y->right != nullptr) {
-                    y->right->parent = y;
-                }
-            }
-            else {
-                if (x != nullptr) {
-                    x->parent = y;
-                }
+                y->right->parent = y;
             }
 
-            transplant2(z, y);
+            transplant(z, y);
             y->left = z->left;
-            if (y->left != nullptr) {
-                y->left->parent = y;
-            }
+            y->left->parent = y;
             y->color = z->color;
         }
 
@@ -96,29 +90,34 @@ public:
 
         if (y_original_color == BLACK) {
             if (x != nullptr) {
-                // Добавляем проверку на существование родителя
-                if (x->parent != nullptr) {
-                    fixDelete(x);
-                }
+                fixDelete(x);
             }
-            else {
-                // Создаем фиктивный узел для случаев, когда x - nullptr
+            else if (y != nullptr) { // Добавляем проверку на y
+                // Создаем фиктивный узел
                 RBTreeNode<T>* phantom = new RBTreeNode<T>(0, BLACK);
-                // Устанавливаем родителя фиктивного узла
-                if (y != nullptr) {
-                    phantom->parent = y->parent;
-                    // Если y стал корнем, обновляем parent фиктивного узла
-                    if (y == _root) {
-                        phantom->parent = nullptr;
-                    }
-                }
-                else {
-                    phantom->parent = z->parent;
+                phantom->parent = y;
+
+                // Если y был перемещен, используем сохраненного родителя
+                if (y_parent && y_parent != z) {
+                    phantom->parent = y_parent;
                 }
 
-                // Если дерево не пустое, выполняем фиксацию
-                if (_root != nullptr) {
-                    fixDelete(phantom);
+                // Помещаем фиктивный узел в соответствующее поддерево
+                if (y->left == nullptr) {
+                    y->left = phantom;
+                }
+                else {
+                    y->right = phantom;
+                }
+
+                fixDelete(phantom);
+
+                // Удаляем фиктивный узел
+                if (phantom->parent->left == phantom) {
+                    phantom->parent->left = nullptr;
+                }
+                else {
+                    phantom->parent->right = nullptr;
                 }
                 delete phantom;
             }
@@ -162,7 +161,7 @@ public:
                 std::cout << "[" << node->_value << "] ";
             }
             else {
-                SetConsoleTextAttribute(hConsole, 1); //Синий (чёрный)
+                SetConsoleTextAttribute(hConsole, 8);
                 std::cout << "(" << node->_value << ") ";
             }
             SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
@@ -300,16 +299,12 @@ private:
                 }
                 else {
                     // Случай 2: дядя чёрный и k - правый ребёнок
-                    k = parent;
                     if (k == parent->right) {
-
+                        k = parent;
                         rotateLeft(k);
-                    }else {
-                            rotateRight(k);
-                        }
                         parent = k->parent;
                         grandparent = (parent != nullptr) ? parent->parent : nullptr;
-                    
+                    }                    
 
                     // Случай 3: дядя чёрный и k - левый ребёнок
                     if (parent != nullptr && grandparent != nullptr) {
@@ -333,12 +328,12 @@ private:
                 }
                 else {
                     // Случай 2: дядя чёрный и k - левый ребёнок
-                    /*if (k == parent->left) {
+                    if (k == parent->left) {
                         k = parent;
                         rotateRight(k);
                         parent = k->parent;
                         grandparent = (parent != nullptr) ? parent->parent : nullptr;
-                    }*/
+                    }
 
                     // Случай 3: дядя чёрный и k - правый ребёнок
                     if (parent != nullptr && grandparent != nullptr) {
@@ -352,15 +347,15 @@ private:
 
         // Корень всегда чёрный
         _root->color = BLACK;
-    }//убрать дублирование
+    }
 
 
     void fixDelete(RBTreeNode<T>* x) {
-        while (x != _root && (x == nullptr || x->color == BLACK)) {
+        while (x != _root && x->color == BLACK) {
             if (x == x->parent->left) {
                 RBTreeNode<T>* s = x->parent->right;
 
-                // Проверка на nullptr брата
+                // Добавляем проверку на nullptr
                 if (s == nullptr) break;
 
                 // Случай 1: брат красный
@@ -369,17 +364,18 @@ private:
                     x->parent->color = RED;
                     rotateLeft(x->parent);
                     s = x->parent->right;
-                    if (s == nullptr) break;  // Добавляем проверку после поворота
+                    // Проверяем после поворота
+                    if (s == nullptr) break;
                 }
 
-                // Случай 2: оба ребенка брата черные (с проверками на nullptr)
+                // Случай 2: оба ребенка брата черные
                 if ((s->left == nullptr || s->left->color == BLACK) &&
                     (s->right == nullptr || s->right->color == BLACK)) {
                     s->color = RED;
                     x = x->parent;
                 }
                 else {
-                    // Случай 3: правый ребенок брата черный
+                    // Случай 3: правый ребенок брата черный, левый красный
                     if (s->right == nullptr || s->right->color == BLACK) {
                         if (s->left != nullptr) {
                             s->left->color = BLACK;
@@ -387,44 +383,42 @@ private:
                         s->color = RED;
                         rotateRight(s);
                         s = x->parent->right;
-                        if (s == nullptr) break;  // Проверка после поворота
+                        // Проверяем после поворота
+                        if (s == nullptr) break;
                     }
 
-                    // Случай 4: левый ребенок брата черный
-                    if (s != nullptr) {
-                        s->color = BLACK;
-                        x->parent->color = BLACK;
-                        if (s->right != nullptr) {
-                            s->right->color = BLACK;
-                        }
-                        rotateLeft(x->parent);
+                    // Случай 4: левый ребенок брата черный, правый красный
+                    s->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    if (s->right != nullptr) {
+                        s->right->color = BLACK;
                     }
+                    rotateLeft(x->parent);
                     x = _root;
                 }
             }
             else {
-                // Симметричный случай для правого ребенка
+                // Симметричный случай для правого поддерева
                 RBTreeNode<T>* s = x->parent->left;
 
+                // Проверка на nullptr
                 if (s == nullptr) break;
 
-                // Случай 1: брат красный
                 if (s->color == RED) {
                     s->color = BLACK;
                     x->parent->color = RED;
                     rotateRight(x->parent);
                     s = x->parent->left;
+                    // Проверяем после поворота
                     if (s == nullptr) break;
                 }
 
-                // Случай 2: оба ребенка брата черные
                 if ((s->right == nullptr || s->right->color == BLACK) &&
                     (s->left == nullptr || s->left->color == BLACK)) {
                     s->color = RED;
                     x = x->parent;
                 }
                 else {
-                    // Случай 3: левый ребенок брата черный
                     if (s->left == nullptr || s->left->color == BLACK) {
                         if (s->right != nullptr) {
                             s->right->color = BLACK;
@@ -432,23 +426,22 @@ private:
                         s->color = RED;
                         rotateLeft(s);
                         s = x->parent->left;
+                        // Проверяем после поворота
                         if (s == nullptr) break;
                     }
 
-                    // Случай 4: правый ребенок брата черный
-                    if (s != nullptr) {
-                        s->color = BLACK;
-                        x->parent->color = BLACK;
-                        if (s->left != nullptr) {
-                            s->left->color = BLACK;
-                        }
-                        rotateRight(x->parent);
+                    s->color = x->parent->color;
+                    x->parent->color = BLACK;
+                    if (s->left != nullptr) {
+                        s->left->color = BLACK;
                     }
+                    rotateRight(x->parent);
                     x = _root;
                 }
             }
         }
 
+        // Гарантируем, что x всегда черный
         if (x != nullptr) {
             x->color = BLACK;
         }
@@ -530,56 +523,43 @@ private:
         if (v != nullptr) {
             v->parent = u->parent;
         }
-
-        // Явно обнуляем указатели старого узла
-        u->parent = nullptr;
-        u->left = nullptr;
-        u->right = nullptr;
     }
-    void transplant2(RBTreeNode<T>* u, RBTreeNode<T>* v) {
-        if (u == nullptr) return;
 
-        if (u->parent == nullptr) {
-            _root = v;
+    void printHelper(RBTreeNode<T>* root, std::string indent, bool last) const {
+        // Добавляем проверку на корректность указателя
+        if (root == nullptr || reinterpret_cast<uintptr_t>(root) == 0xFFFFFFFFFFFFFFFB) {
+            return;
         }
-        else if (u == u->parent->left) {
-            u->parent->left = v;
+
+        std::cout << indent;
+        if (last) {
+            std::cout << "R----";
+            indent += "     ";
         }
         else {
-            u->parent->right = v;
+            std::cout << "L----";
+            indent += "|    ";
         }
 
-        if (v != nullptr) {
-            v->parent = u->parent;
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (root->color == RED) {
+            SetConsoleTextAttribute(hConsole, 12); // Красный
+            std::cout << "[" << root->_value << "]" << std::endl;
         }
-    }
-    void printHelper(RBTreeNode<T>* root, std::string indent, bool last) const {
-        if (root != nullptr) {
-            std::cout << indent;
-            if (last) {
-                std::cout << "R----";
-                indent += "     ";
-            }
-            else {
-                std::cout << "L----";
-                indent += "|    ";
-            }
+        else {
+            SetConsoleTextAttribute(hConsole, 8);
+            std::cout << "(" << root->_value << ")" << std::endl;
+        }
+        SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
 
-            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (root->color == RED) {
-                SetConsoleTextAttribute(hConsole, 12); // Красный
-                std::cout << "[" << root->_value << "]" << std::endl;
-            }
-            else {
-                SetConsoleTextAttribute(hConsole, 1); // Синий (черный)
-                std::cout << "(" << root->_value << ")" << std::endl;
-            }
-            SetConsoleTextAttribute(hConsole, 7); // Возвращаем стандартный цвет
-
+        // Рекурсивный вывод с проверками
+        if (root->left != nullptr && reinterpret_cast<uintptr_t>(root->left) != 0xFFFFFFFFFFFFFFFB) {
             printHelper(root->left, indent, false);
+        }
+        if (root->right != nullptr && reinterpret_cast<uintptr_t>(root->right) != 0xFFFFFFFFFFFFFFFB) {
             printHelper(root->right, indent, true);
         }
     }
-    
 };
+
 #endif //TRBTREE_H
