@@ -40,8 +40,8 @@ public:
     
     void insert(T val) {//?
         if (search(val) != nullptr) {
-            return;  // Дубликат - игнорируем
-            //вернуть исключение
+            /*return;*/  // Дубликат - игнорируем
+            throw std::runtime_error("Duplicate value insertion attempted");
         }
         RBTreeNode<T>* node = new RBTreeNode<T>(val);
         _root = insertHelper(_root, node);

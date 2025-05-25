@@ -489,11 +489,16 @@ TEST_F(RBTreeTest, InsertAndSearch) {
     // Проверяем, что корень должен быть чёрный
     EXPECT_EQ(tree.search(50)->color, BLACK);
     EXPECT_TRUE(checkRedBlackProperties(tree.search(50)));
+
+    // Проверяем, что дубликаты вызывают исключение
+    EXPECT_THROW(tree.insert(50), std::runtime_error);
+    EXPECT_THROW(tree.insert(30), std::runtime_error);
+    EXPECT_THROW(tree.insert(70), std::runtime_error);
 }
 
 TEST_F(RBTreeTest, InsertDuplicate) {
     tree.insert(50);
-    tree.insert(50);  // Дубликат не будет добавлен
+    EXPECT_THROW(tree.insert(50), std::runtime_error); // Проверяем исключение
     auto node = tree.search(50);
     EXPECT_NE(node, nullptr);
     EXPECT_EQ(node->_value, 50);
@@ -699,6 +704,10 @@ TEST_F(RBTreeTest, StringValues) {
     EXPECT_EQ(stringTree.search("banana")->color, BLACK);
     EXPECT_EQ(stringTree.search("apple")->color, RED);
     EXPECT_EQ(stringTree.search("cherry")->color, RED);
+
+    // Проверка дубликатов
+    EXPECT_THROW(stringTree.insert("apple"), std::runtime_error);
+    EXPECT_THROW(stringTree.insert("banana"), std::runtime_error);
 }
 
 TEST_F(RBTreeTest, EmptyTreeOperations) {
@@ -708,5 +717,5 @@ TEST_F(RBTreeTest, EmptyTreeOperations) {
     EXPECT_EQ(emptyTree.getMax(), nullptr);
     EXPECT_NO_THROW(emptyTree.erase(10));
     EXPECT_NO_THROW(emptyTree.levelOrder());
-    //EXPECT_NO_THROW(emptyTree.print());
+    EXPECT_NO_THROW(emptyTree.print());
 }
