@@ -6,6 +6,8 @@
 #include <Windows.h>
 #include "../lib_rbtree/TRBTree.h"
 
+
+
 int main() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);

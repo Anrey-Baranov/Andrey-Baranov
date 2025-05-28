@@ -78,7 +78,7 @@ public:
         }
 
         for (const auto& pair : _data) {
-            std::cout << "Checking key: " << pair.first() << ", value: " << pair.second() << std::endl;
+            //std::cout << "Checking key: " << pair.first() << ", value: " << pair.second() << std::endl;
             if (pair.first() == key) {  
                 return pair.second();
             }
@@ -89,7 +89,7 @@ public:
     int size() override {
         return _data.size();
     }
-
+    static_assert(std::is_integral_v<TKey>,"TUnsortedTable: TKey must be an integer type (int, long, etc.)");
     TKey generate_key() {
         static TKey last_key = 0;
         return ++last_key;
